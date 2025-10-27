@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --surface: #ffffff;
+        --text: #111111;
+        --muted: #6b7280;
+        --accent: #0a84ff; /* Apple blue */
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+          "Segoe UI Emoji";
+        color: var(--text);
+      }
+      .navbar-glass {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      }
+      .page {
+        height: 100svh;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .auth-layout {
+        flex: 1 1 auto;
+        overflow: hidden;
+      }
+      .left-pane,
+      .right-pane {
+        min-height: 100%;
+      }
+      .left-pane {
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to bottom right,
+            rgba(0, 0, 0, 0.45),
+            rgba(0, 0, 0, 0.45)
+          ),
+          url("https://mabaliisland.com/wp-content/uploads/2025/10/13-1.jpg")
+            center/cover no-repeat;
+      }
+      .hero-content {
+        position: relative;
+        z-index: 1;
+        color: #fff;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+      }
+      .glass-pill {
+        display: inline-block;
+        padding: 0.35rem 0.6rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(8px);
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+      }
+      .hero-title {
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 0.75rem 0 1rem;
+        letter-spacing: -0.6px;
+        font-size: clamp(2rem, 4vw + 1rem, 3.5rem);
+        background: linear-gradient(90deg, #ffffff, #e5e7eb);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hero-subtitle {
+        color: rgba(255, 255, 255, 0.85);
+        max-width: 720px;
+      }
+      .right-pane .card {
+        border: 1px solid rgba(0, 0, 0, 0.06);
+      }
+      .brand-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        background: var(--accent);
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 0.25rem;
+      }
+
+      /* 70/30 split on lg+ */
+      @media (min-width: 992px) {
+        .left-pane {
+          flex: 0 0 70%;
+          max-width: 70%;
+        }
+        .right-pane {
+          flex: 0 0 30%;
+          max-width: 30%;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-white">
+    <div class="page">
+      <div class="container-fluid auth-layout d-flex align-items-stretch">
+        <div
+          class="left-pane d-none d-lg-flex align-items-end justify-content-start"
+        >
+          <div class="hero-bg"></div>
+          <div class="hero-content text-start px-5 pb-5">
+            <span class="glass-pill">Resort Management</span>
+            <h1 class="hero-title">Experience Mabali Island</h1>
+            <p class="hero-subtitle lead">
+              Lakeside cabins, adventure and serene escapes — sign in to
+              continue your journey.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="right-pane d-flex align-items-center justify-content-center ms-auto p-4 p-lg-5 order-lg-2"
+        >
+          <div class="card shadow-sm" style="width: 100%; max-width: 420px">
+            <div class="card-body p-4 p-lg-5">
+              <h2 class="h4 mb-4 text-center">Sign in</h2>
+
+              {% if messages %} {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} mb-3" role="alert">
+                {{ message }}
+              </div>
+              {% endfor %} {% endif %}
+
+              <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label for="id_username" class="form-label">Username</label>
+                  {{ form.username }} {% if form.username.errors %}
+                  <div class="invalid-feedback d-block">
+                    {{ form.username.errors|striptags }}
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="mb-4">
+                  <label for="id_password" class="form-label">Password</label>
+                  {{ form.password }} {% if form.password.errors %}
+                  <div class="invalid-feedback d-block">
+                    {{ form.password.errors|striptags }}
+                  </div>
+                  {% endif %}
+                </div>
+                <button type="submit" class="btn btn-dark w-100">
+                  Continue
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
