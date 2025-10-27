@@ -2,7 +2,16 @@
 {% block title %}Dashboard - Mabali{% endblock %}
 
 {% block content %}
+{% if request.user.is_superuser %}
+<!-- SUPERUSER DASHBOARD - Full Analytics View -->
 <div class="row g-4">
+  <div class="col-12">
+    <div class="alert alert-info d-flex align-items-center">
+      <i class="bx bx-info-circle me-2"></i>
+      <span>Administrator Dashboard - Full Access View</span>
+    </div>
+  </div>
+  
   <div class="col-12 col-md-6 col-lg-4">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -14,20 +23,14 @@
           {% for c in counters %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <span>{{ c.name }}</span>
-            {% if can_view_amounts %}
-              <span class="badge bg-label-primary">{{ c.pos|floatformat:0 }}</span>
-            {% else %}
-              <span class="text-muted">—</span>
-            {% endif %}
+            <span class="badge bg-label-primary">{{ c.pos|floatformat:0 }}</span>
           </li>
           {% endfor %}
         </ul>
-        {% if can_view_amounts %}
         <div class="d-flex justify-content-between">
           <span class="fw-semibold">Total (excl. Parasailing)</span>
           <span class="fw-bold">{{ total_pos_ex_parasailing|floatformat:0 }}</span>
         </div>
-        {% endif %}
       </div>
     </div>
   </div>
@@ -40,7 +43,7 @@
         <div class="d-flex justify-content-between mb-2"><span>Kids</span><span>{{ guest_entry.kids }}</span></div>
         <div class="d-flex justify-content-between mb-2"><span>Total</span><span class="fw-bold">{{ guest_entry.total }}</span></div>
         <hr>
-        <div class="d-flex justify-content-between"><span>Avg spend per person</span><span class="fw-bold">{% if can_view_amounts %}{{ avg_spend_per_person }}{% else %}—{% endif %}</span></div>
+        <div class="d-flex justify-content-between"><span>Avg spend per person</span><span class="fw-bold">{{ avg_spend_per_person }}</span></div>
       </div>
     </div>
   </div>
@@ -53,7 +56,7 @@
           {% for e in expenses %}
           <li class="list-group-item d-flex justify-content-between">
             <span>{{ e.title }}</span>
-            <span>{% if can_view_amounts %}{{ e.amount|floatformat:0 }}{% else %}—{% endif %}</span>
+            <span>{{ e.amount|floatformat:0 }}</span>
           </li>
           {% endfor %}
         </ul>
@@ -73,7 +76,7 @@
               <tr>
                 <td>{{ t.payer }}</td>
                 <td>{{ t.reference }}</td>
-                <td class="text-end">{% if can_view_amounts %}{{ t.amount|floatformat:0 }}{% else %}—{% endif %}</td>
+                <td class="text-end">{{ t.amount|floatformat:0 }}</td>
               </tr>
               {% empty %}
               <tr><td colspan="3" class="text-center text-muted">No trust payments today</td></tr>
@@ -153,7 +156,7 @@
               <tr>
                 <td>{{ x.type }}</td>
                 <td>{{ x.title }}</td>
-                <td class="text-end">{% if can_view_amounts %}{{ x.amount|floatformat:0 }}{% else %}—{% endif %}</td>
+                <td class="text-end">{{ x.amount|floatformat:0 }}</td>
               </tr>
               {% empty %}
               <tr><td colspan="3" class="text-center text-muted">No records</td></tr>
@@ -165,4 +168,76 @@
     </div>
   </div>
 </div>
+
+{% else %}
+<!-- REGULAR USER DASHBOARD - Welcome View -->
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <div class="mb-4">
+          <i class="bx bx-user-circle display-1 text-primary"></i>
+        </div>
+        <h2 class="mb-3">Welcome to Mabali Resort</h2>
+        <h4 class="text-muted mb-4">Hello, {{ request.user.get_full_name|default:request.user.username }}!</h4>
+        <p class="lead mb-4">You are successfully logged into the resort management system.</p>
+        <div class="row g-3 mt-4">
+          <div class="col-6 col-md-3">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bx bx-time-five fs-3 text-info mb-2"></i>
+              <small class="text-muted">Current Time</small>
+              <span id="currentTime" class="fw-semibold"></span>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bx bx-calendar fs-3 text-success mb-2"></i>
+              <small class="text-muted">Today's Date</small>
+              <span class="fw-semibold">{{ today|date:"M d, Y" }}</span>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bx bx-sun fs-3 text-warning mb-2"></i>
+              <small class="text-muted">Status</small>
+              <span class="fw-semibold text-success">Active</span>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bx bx-shield-check fs-3 text-primary mb-2"></i>
+              <small class="text-muted">Access Level</small>
+              <span class="fw-semibold">User</span>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <p class="text-muted mb-0">For assistance or inquiries, please contact your administrator.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Update current time
+function updateTime() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-US', {
+    hour12: true,
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  const timeElement = document.getElementById('currentTime');
+  if (timeElement) {
+    timeElement.textContent = timeString;
+  }
+}
+
+// Update time immediately and then every second
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+
+{% endif %}
 {% endblock %}

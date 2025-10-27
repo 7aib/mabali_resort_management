@@ -1,28 +1,30 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 
 from .forms import LoginForm
 
 
 def login_view(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
+            username = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
             user = authenticate(request, username=username, password=password)
-            if user is not None:
+            if user:
                 login(request, user)
-                return redirect('dashboard')
+                return redirect("dashboard")
             else:
-                messages.error(request, 'Invalid username or password.')
+                messages.error(request, "Invalid username or password.")
     else:
         form = LoginForm()
 
-    return render(request, 'login.html', {'form': form})
+    return render(request, "login.html", {"form": form})
+
 
 def logout_view(request):
     from django.contrib.auth import logout
+
     logout(request)
-    return redirect('login')
+    return redirect("login")

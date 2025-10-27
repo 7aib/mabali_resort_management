@@ -1,9 +1,9 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 from datetime import date
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 
-
+@login_required
 def dashboard_view(request):
     # Dummy data; replace with real queries later
     today = date.today()
@@ -14,7 +14,9 @@ def dashboard_view(request):
         {"name": "Parasailing", "pos": 60000},  # excluded from POS in totals per rule
         {"name": "Cafe", "pos": 40000},
     ]
-    total_pos_ex_parasailing = sum(c["pos"] for c in counters if c["name"].lower() != "parasailing")
+    total_pos_ex_parasailing = sum(
+        c["pos"] for c in counters if c["name"].lower() != "parasailing"
+    )
 
     guest_entry = {
         "date": today,
@@ -23,7 +25,9 @@ def dashboard_view(request):
         "total": 155,
     }
 
-    avg_spend_per_person = round((total_pos_ex_parasailing or 0) / (guest_entry["total"] or 1), 2)
+    avg_spend_per_person = round(
+        (total_pos_ex_parasailing or 0) / (guest_entry["total"] or 1), 2
+    )
 
     expenses = [
         {"title": "Fuel & Maintenance", "amount": 18000},
@@ -32,8 +36,18 @@ def dashboard_view(request):
     ]
 
     trusts_today = [
-        {"payer": "ABC Travels", "amount": 35000, "reference": "TR-2025-1001", "paid": True},
-        {"payer": "Walk-in Group", "amount": 15000, "reference": "TR-2025-1002", "paid": True},
+        {
+            "payer": "ABC Travels",
+            "amount": 35000,
+            "reference": "TR-2025-1001",
+            "paid": True,
+        },
+        {
+            "payer": "Walk-in Group",
+            "amount": 15000,
+            "reference": "TR-2025-1002",
+            "paid": True,
+        },
     ]
 
     complimentary = [
@@ -48,8 +62,18 @@ def dashboard_view(request):
     }
 
     events_today = [
-        {"guest_name": "Khan Family", "location": "Lakeside Lawn", "event_type": "Birthday", "amount": 65000},
-        {"guest_name": "BluePeak Corp", "location": "Hall A", "event_type": "Team Meetup", "amount": 120000},
+        {
+            "guest_name": "Khan Family",
+            "location": "Lakeside Lawn",
+            "event_type": "Birthday",
+            "amount": 65000,
+        },
+        {
+            "guest_name": "BluePeak Corp",
+            "location": "Hall A",
+            "event_type": "Team Meetup",
+            "amount": 120000,
+        },
     ]
 
     expense_refunds = [
@@ -62,6 +86,7 @@ def dashboard_view(request):
     can_view_amounts = user_role in {"CEO", "ACCOUNTANT"}
 
     context = {
+        "today": today,
         "counters": counters,
         "total_pos_ex_parasailing": total_pos_ex_parasailing,
         "guest_entry": guest_entry,
