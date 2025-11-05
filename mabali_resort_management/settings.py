@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     # custom apps
     "authentication",
     "dashboard",
+    "inventory",
 ]
 
 MIDDLEWARE = [
