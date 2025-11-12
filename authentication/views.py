@@ -1,6 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+
+from authentication.models import User
 
 from .forms import LoginForm
 
@@ -28,3 +31,9 @@ def logout_view(request):
 
     logout(request)
     return redirect("login")
+
+@login_required
+def employee_dashboard(request):
+    
+    employees = User.objects.exclude(role__iexact='ceo')
+    return render(request, "employee_dashboard.html", {"employees": employees})
