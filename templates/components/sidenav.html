@@ -1,198 +1,216 @@
 {% load static %}
-  <aside
-    id="layout-menu"
-    class="layout-menu menu-vertical menu bg-menu-theme"
-  >
-    <div class="app-brand demo">
-      <a href="index.html" class="app-brand-link">
-        <span class="app-brand-logo demo">
-          <img src="{% static 'logo/mabali-icon.png' %}" width="25" height="25" alt="Mabali logo" />
-        </span>
-        <span class="app-brand-text demo menu-text fw-bolder ms-2"
-          >Mabali</span
-        >
-      </a>
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+  <div class="app-brand demo">
+    <a href="index.html" class="app-brand-link">
+      <span class="app-brand-logo demo">
+        <img src="{% static 'logo/mabali-icon.png' %}" width="25" height="25" alt="Mabali logo" />
+      </span>
+      <span class="app-brand-text demo menu-text fw-bolder ms-2">Mabali</span>
+    </a>
 
-      <a
-        href="javascript:void(0);"
-        class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none"
-      >
-        <i class="bx bx-chevron-left bx-sm align-middle"></i>
-      </a>
-    </div>
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+      <i class="bx bx-chevron-left bx-sm align-middle"></i>
+    </a>
+  </div>
 
-    <div class="menu-inner-shadow"></div>
-    {% if request.user.is_superuser %}
-    <ul class="menu-inner py-1">
-      <!-- Dashboard -->
-      <li class="menu-item active">
-        <a href="{% url 'dashboard' %}" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-home-circle"></i>
-          <div data-i18n="Dashboard">Dashboard</div>
-        </a>
-      </li>
+  <div class="menu-inner-shadow"></div>
+  {% if request.user.is_superuser %}
+  <ul class="menu-inner py-1">
+    <!-- Dashboard -->
+    <li class="menu-item">
+      <a href="{% url 'dashboard' %}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-home-circle"></i>
+        <div data-i18n="Dashboard">Dashboard</div>
+      </a>
+    </li>
     {% endif %}
-      
-      <!-- Human Resource -->
-      <li class="menu-item">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="menu-icon tf-icons bx bx-group"></i>
-          <div data-i18n="Human Resource">Human Resource</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="{% url 'employee_dashboard' %}" class="menu-link">
-              <div data-i18n="Employees">Employees</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Attendance">Attendance</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Payroll">Payroll</div>
-            </a>
-          </li>
-        </ul>
-      </li>
 
-      <!-- Cash Counters -->
-      <li class="menu-item">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="menu-icon tf-icons bx bx-calculator"></i>
-          <div data-i18n="Cash Counters">Cash Counters</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Daily Sales">Daily Sales</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Cash Register">Cash Register</div>
-            </a>
-          </li>
-        </ul>
-      </li>
+    <!-- Human Resource -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-group"></i>
+        <div data-i18n="Human Resource">Human Resource</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="{% url 'employee_list' %}" class="menu-link">
+            <div data-i18n="Employees">Employees</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Attendance">Attendance</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Payroll">Payroll</div>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <!-- Finance -->
-      <li class="menu-item">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="menu-icon tf-icons bx bx-dollar"></i>
-          <div data-i18n="Finance">Finance</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Accounts">Accounts</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Transactions">Transactions</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Reports">Reports</div>
-            </a>
-          </li>
-        </ul>
-      </li>
+    <!-- Cash Counters -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-calculator"></i>
+        <div data-i18n="Cash Counters">Cash Counters</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Daily Sales">Daily Sales</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Cash Register">Cash Register</div>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <!-- Guests -->
-      <li class="menu-item">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="menu-icon tf-icons bx bx-user"></i>
-          <div data-i18n="Guests">Guests</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Guest List">Guest List</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Check-in/Check-out">Check-in/Check-out</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Guest History">Guest History</div>
-            </a>
-          </li>
-        </ul>
-      </li>
+    <!-- Finance -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-dollar"></i>
+        <div data-i18n="Finance">Finance</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Accounts">Accounts</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Transactions">Transactions</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Reports">Reports</div>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <!-- Inventory -->
-      <li class="menu-item">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="menu-icon tf-icons bx bx-package"></i>
-          <div data-i18n="Inventory">Inventory</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Items">Items</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Stock Management">Stock Management</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Purchase Orders">Purchase Orders</div>
-            </a>
-          </li>
-        </ul>
-      </li>
+    <!-- Guests -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-user"></i>
+        <div data-i18n="Guests">Guests</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Guest List">Guest List</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Check-in/Check-out">Check-in/Check-out</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Guest History">Guest History</div>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <!-- Rooms -->
-      <li class="menu-item">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="menu-icon tf-icons bx bx-bed"></i>
-          <div data-i18n="Rooms">Rooms</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Room Management">Room Management</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Reservations">Reservations</div>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link">
-              <div data-i18n="Room Status">Room Status</div>
-            </a>
-          </li>
-        </ul>
-      </li>
+    <!-- Inventory -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-package"></i>
+        <div data-i18n="Inventory">Inventory</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Items">Items</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Stock Management">Stock Management</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Purchase Orders">Purchase Orders</div>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <!-- Misc -->
-      <li class="menu-header small text-uppercase">
-        <span class="menu-header-text">Misc</span>
-      </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-support"></i>
-          <div data-i18n="Support">Support</div>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <i class="menu-icon tf-icons bx bx-file"></i>
-          <div data-i18n="Documentation">Documentation</div>
-        </a>
-      </li>
-    </ul>
-  </aside>
+    <!-- Rooms -->
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-bed"></i>
+        <div data-i18n="Rooms">Rooms</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Room Management">Room Management</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Reservations">Reservations</div>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <div data-i18n="Room Status">Room Status</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Misc -->
+    <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Misc</span>
+    </li>
+    <li class="menu-item">
+      <a href="#" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-support"></i>
+        <div data-i18n="Support">Support</div>
+      </a>
+    </li>
+    <li class="menu-item">
+      <a href="#" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-file"></i>
+        <div data-i18n="Documentation">Documentation</div>
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- Script to highlight active menu item -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const currentUrl = window.location.href;
+    const menuLinks = document.querySelectorAll('.menu-link');
+
+    menuLinks.forEach(link => {
+      if (link.href === currentUrl) {
+        const menuItem = link.closest('.menu-item');
+        if (menuItem) {
+          menuItem.classList.add('active');
+
+          // Handle submenu
+          const parentSub = menuItem.closest('.menu-sub');
+          if (parentSub) {
+            const parentMenuItem = parentSub.closest('.menu-item');
+            if (parentMenuItem) {
+              parentMenuItem.classList.add('active', 'open');
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
