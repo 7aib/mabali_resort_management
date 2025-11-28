@@ -14,8 +14,9 @@
   </div>
 
   <div class="menu-inner-shadow"></div>
-  {% if request.user.is_superuser %}
   <ul class="menu-inner py-1">
+    {% if request.user.is_superuser %}
+
     <!-- Dashboard -->
     <li class="menu-item">
       <a href="{% url 'dashboard' %}" class="menu-link">
@@ -23,7 +24,6 @@
         <div data-i18n="Dashboard">Dashboard</div>
       </a>
     </li>
-    {% endif %}
 
     <!-- Human Resource -->
     <li class="menu-item">
@@ -37,18 +37,23 @@
             <div data-i18n="Employees">Employees</div>
           </a>
         </li>
-        <li class="menu-item">
-          <a href="#" class="menu-link">
-            <div data-i18n="Attendance">Attendance</div>
-          </a>
-        </li>
-        <li class="menu-item">
-          <a href="#" class="menu-link">
-            <div data-i18n="Payroll">Payroll</div>
-          </a>
-        </li>
+        <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Coming Soon">
+          <li class="menu-item disabled">
+            <a href="#" class="menu-link">
+              <div data-i18n="Attendance">Attendance</div>
+            </a>
+          </li>
+        </span>
+        <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Coming Soon">
+          <li class="menu-item disabled">
+            <a href="#" class="menu-link">
+              <div data-i18n="Payroll">Payroll</div>
+            </a>
+          </li>
+        </span>
       </ul>
     </li>
+    {% endif %}
 
     <!-- Cash Counters -->
     <li class="menu-item">
