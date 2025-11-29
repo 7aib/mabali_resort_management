@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        {% if field.name == 'role' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if form.is_active %}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch mt-4">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                            {{ form.is_active.label }}</label>
+                                    </div>
+                                    {% if form.is_active.help_text %}
+                                    <small class="form-text text-muted">{{ form.is_active.help_text }}</small>
+                                    {% endif %}
+                                    {% for error in form.is_active.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ error }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% elif field.name == 'is_active' %}
+                        {# Skip is_active as it is rendered with role #}
+                        {% else %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ error }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'employee_list' %}" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/utils/form-utils.js' %}"></script>
+<script>
+    // Initialize form error clearing for this form
+    formUtils.initErrorClearing('form', 'a[href*="employee_list"]');
+</script>
+{% endblock %}
