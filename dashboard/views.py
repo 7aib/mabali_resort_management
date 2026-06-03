@@ -1,10 +1,16 @@
+"""Dashboard views for displaying resort management data."""
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.http import HttpResponse
+
+from authentication.choices import UserRoles
+
 
 @login_required
-def dashboard_view(request):
+def dashboard_view(request: HttpResponse) -> HttpResponse:
+    """Display the main dashboard with financial and operational metrics."""
     # Dummy data; replace with real queries later
     today = date.today()
 
@@ -83,7 +89,7 @@ def dashboard_view(request):
 
     # Role-based visibility for amounts (CEO, ACCOUNTANT)
     user_role = getattr(request.user, "role", None)
-    can_view_amounts = user_role in {"CEO", "ACCOUNTANT"}
+    can_view_amounts = user_role in (UserRoles.CEO, UserRoles.ACCOUNTANT)
 
     context = {
         "today": today,

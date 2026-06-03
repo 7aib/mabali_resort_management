@@ -42,23 +42,40 @@ Mabali Resort Management is a Django project that provides a simple admin/dashbo
    python -m venv .venv
    source .venv/bin/activate  # or .venv\Scripts\activate on Windows
    ```
-2. Install requirements (add your requirements as needed):
+
+2. Install dependencies:
    ```sh
-   pip install django
+   pip install -r requirements.txt
    ```
-3. Set up DB and run server:
+
+3. Set up environment variables:
+   ```sh
+   cp .env.example .env
+   # Edit .env with your configuration (generate a new SECRET_KEY for production)
+   ```
+
+4. Set up DB and run server:
    ```sh
    python manage.py migrate
    python manage.py createsuperuser
    python manage.py runserver
    ```
-4. Open the site at http://127.0.0.1:8000/ . Login uses the auth views in [`authentication/views.py`](authentication/views.py).
+
+5. Open the site at http://127.0.0.1:8000/ . Login uses the auth views in [`authentication/views.py`](authentication/views.py).
 
 ## Notes for contributors
 
+- **Security**: Never commit `.env` files or hardcoded secrets. Use environment variables for sensitive configuration (see [.env.example](.env.example)).
+- **Code Quality**: 
+  - All Python files should include docstrings for modules, classes, and functions.
+  - Use type hints on function parameters and return values.
+  - Follow PEP 8 style guidelines.
+  - Imports should be organized at the top of files (not inside functions).
+  - Use Django's `ValidationError` instead of plain Python exceptions for model validation.
 - The project uses a custom user model defined in [`authentication/models.py`](authentication/models.py) and referenced by [`AUTH_USER_MODEL`](mabali_resort_management/settings.py).
 - Dashboard pages render charts using scripts in [static/js/dashboards-analytics.js](static/js/dashboards-analytics.js). If you add new pages that need charts, follow the same pattern.
 - Toast placement and disposal logic lives in [static/js/ui-toasts.js](static/js/ui-toasts.js).
+- Role-based access control uses the `UserRoles` enum in [`authentication/choices.py`](authentication/choices.py). Always use this enum for role comparisons instead of hardcoded strings.
 
 ## Tests
 

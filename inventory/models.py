@@ -1,6 +1,6 @@
+"""Inventory management models."""
 from django.db import models
 from django.core.validators import MinValueValidator
-from django.utils import timezone
 
 from authentication.models import User
 from .choices import AmmoCaliberChoices, AssetCategoryChoices, GeneratorCapacityChoices, HospitalChoices, StockStatusChoices, FuelTypeChoices
@@ -8,6 +8,7 @@ from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteMod
 
 
 class InventoryItem(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Base inventory item model for tracking assets and supplies."""
 
     name = models.CharField(max_length=120)  # e.g. "Petrol", "9mm Ammo", "100kv Generator"
     category = models.CharField(max_length=20, choices=AssetCategoryChoices.choices)
@@ -20,13 +21,16 @@ class InventoryItem(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     notes = models.TextField(blank=True)
 
     class Meta:
+        """Model options."""
         ordering = ['-created_at']
 
-    def __str__(self):
-        return f"{self.name} ({self.issued_to_asset.category}) - {self.quantity} {self.unit}"
+    def __str__(self) -> str:
+        """Return string representation of inventory item."""
+        return f"{self.name} - {self.quantity} {self.unit}"
 
 
 class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log fuel transactions (usage, consumption, transfers)."""
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_fuel_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='fuel_txns')
@@ -36,11 +40,14 @@ class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
     transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices, default=StockStatusChoices.REQUIRED)
     notes = models.TextField(blank=True)
 
-    def __str__(self):
-        return f"{self.fuel_type} {self.quantity} {self.unit} -> {self.issued_to or 'stock'}"
+    def __str__(self) -> str:
+        """Return string representation of fuel transaction."""
+        created_by_name = self.created_by.get_full_name() if self.created_by else 'Unknown'
+        return f"{self.fuel_type} {self.quantity} {self.unit} by {created_by_name}"
 
 
 class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log ammunition transactions (issuance, consumption)."""
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_ammo_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ammo_txns')
@@ -48,11 +55,14 @@ class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
 
-    def __str__(self):
-        return f"{self.caliber} x{self.quantity} -> {self.issued_to or 'stock'}"
+    def __str__(self) -> str:
+        """Return string representation of ammo transaction."""
+        created_by_name = self.created_by.get_full_name() if self.created_by else 'Unknown'
+        return f"{self.caliber} x{self.quantity} by {created_by_name}"
 
 
 class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log generator usage and fuel consumption."""
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_generator_log')
     generator = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='generator_logs')
@@ -61,11 +71,13 @@ class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     fuel_used_liters = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
 
-    def __str__(self):
-        return f"{self.generator.code} {self.capacity} @ {self.log_time.date()}"
+    def __str__(self) -> str:
+        """Return string representation of generator log."""
+        return f"{self.generator.name} {self.capacity} @ {self.created_at.date()}"
 
 
 class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log ambulance trips including distance and medical expenses."""
 
     ambulance = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ambulance_logs')
     start_reading_km = models.PositiveIntegerField(validators=[MinValueValidator(0)])
@@ -80,10 +92,13 @@ class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
         return max(0, self.end_reading_km - self.start_reading_km)
 
     def save(self, *args, **kwargs):
+        """Validate ambulance log readings before saving."""
+        from django.core.exceptions import ValidationError
         # ensure sensible readings
         if self.end_reading_km is not None and self.start_reading_km is not None and self.end_reading_km < self.start_reading_km:
-            raise ValueError("end_reading_km must be >= start_reading_km")
+            raise ValidationError("end_reading_km must be >= start_reading_km")
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.ambulance.code} {self.created_at} kms: {self.kms_travelled}"
+    def __str__(self) -> str:
+        """Return string representation of ambulance log."""
+        return f"{self.ambulance.name} {self.created_at.date()} - {self.kms_travelled}km"
