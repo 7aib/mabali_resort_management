@@ -2,22 +2,166 @@
 {% block title %} Employee Dashboard{% endblock %}
 
 {% block content %}
-    <table>
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Phone No.</th>
-                <th>Role</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for employee in employees %}
-            <tr>
-                <td>{{ employee.username }}</td>
-                <td>{{ employee.phone_number }}</td>
-                <td>{{ employee.role }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="m-0">Employees Directory</h5>
+        <span class="badge bg-label-primary">{{ employees|length }} Total</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-uppercase fw-semibold">Username</th>
+                <th class="text-uppercase fw-semibold">Phone Number</th>
+                <th class="text-uppercase fw-semibold">Role</th>
+                <th class="text-uppercase fw-semibold">Status</th>
+                <th class="text-center text-uppercase fw-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for employee in employees %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="avatar avatar-sm bg-label-primary rounded-circle">
+                      <span class="avatar-initial rounded-circle fw-semibold">
+                        {{ employee.username|first|upper }}
+                      </span>
+                    </div>
+                    <span class="fw-medium">{{ employee.username }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="text-muted">{{ employee.phone_number|default:"—" }}</span>
+                </td>
+                <td>
+                  <span class="badge bg-label-info">{{ employee.get_role_display }}</span>
+                </td>
+                <td>
+                  {% if employee.is_active %}
+                    <span class="badge bg-label-success">
+                      <i class="bx bx-check-circle me-1" style="font-size: 0.75rem;"></i>Active
+                    </span>
+                  {% else %}
+                    <span class="badge bg-label-danger">
+                      <i class="bx bx-x-circle me-1" style="font-size: 0.75rem;"></i>Inactive
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <div class="btn-group" role="group">
+                    <a href="{% url 'employee_detail' employee.id %}" class="btn btn-sm btn-icon btn-text-secondary" title="View">
+                      <i class="bx bx-show"></i>
+                    </a>
+                    {% if request.user.role == 'CEO' or request.user.role == 'HR_MANAGER' %}
+                    <a href="{% url 'employee_edit' employee.id %}" class="btn btn-sm btn-icon btn-text-info" title="Edit">
+                      <i class="bx bx-edit"></i>
+                    </a>
+                    <a href="{% url 'employee_delete' employee.id %}" class="btn btn-sm btn-icon btn-text-danger" title="Delete" onclick="return confirm('Delete this employee?');">
+                      <i class="bx bx-trash"></i>
+                    </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center py-5">
+                  <div class="text-muted">
+                    <i class="bx bx-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+                    <p class="mt-2">No employees found</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      {% if messages %}
+      <div class="card-footer">
+        {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show mb-2" role="alert">
+          <i class="bx bx-error-circle me-2"></i>{{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
 
+<style>
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    font-size: 0.875rem;
+  }
+  .avatar-sm {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.75rem;
+  }
+  .bg-label-primary {
+    background-color: rgba(105, 108, 255, 0.1);
+    color: #696cff;
+  }
+  .bg-label-info {
+    background-color: rgba(10, 184, 255, 0.1);
+    color: #0ab8ff;
+  }
+  .bg-label-success {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+  .bg-label-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  .btn-icon {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-text-secondary {
+    color: #6c757d;
+  }
+  .btn-text-secondary:hover {
+    color: #5a6268;
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  .btn-text-info {
+    color: #0ab8ff;
+  }
+  .btn-text-info:hover {
+    color: #0a9fd8;
+    background-color: rgba(10, 184, 255, 0.1);
+  }
+  .btn-text-danger {
+    color: #ef4444;
+  }
+  .btn-text-danger:hover {
+    color: #dc2626;
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+  .btn-group {
+    gap: 0.25rem;
+  }
+  .btn-group .btn {
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+</style>
 {% endblock %}

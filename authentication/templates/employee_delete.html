@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Delete {{ employee.get_full_name|default:employee.username }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card border-danger">
+      <div class="card-header bg-danger bg-opacity-10 border-danger">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="m-0 text-danger">
+            <i class="bx bx-trash me-2"></i>Delete Employee
+          </h5>
+          <span class="badge bg-label-warning">Admin Only</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <div class="avatar avatar-xl bg-label-danger rounded" style="display: inline-flex; margin: 0 auto;">
+            <span class="avatar-initial rounded fw-bold" style="font-size: 2rem;">
+              {{ employee.username|first|upper }}
+            </span>
+          </div>
+        </div>
+
+        <h6 class="text-center mb-2">{{ employee.get_full_name|default:employee.username }}</h6>
+        <p class="text-center text-muted mb-4">@{{ employee.username }}</p>
+
+        <div class="alert alert-danger" role="alert">
+          <strong>Warning!</strong> This action cannot be undone. You are about to permanently delete this employee record from the system.
+        </div>
+
+        <div class="card bg-light mb-4">
+          <div class="card-body">
+            <h6 class="card-title">Employee Information:</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2"><span class="fw-semibold">Email:</span> {{ employee.email|default:"Not provided" }}</li>
+              <li class="mb-2"><span class="fw-semibold">Phone:</span> {{ employee.phone_number|default:"—" }}</li>
+              <li class="mb-2"><span class="fw-semibold">Role:</span> <span class="badge bg-label-info">{{ employee.get_role_display }}</span></li>
+              <li class="mb-2"><span class="fw-semibold">Status:</span> 
+                {% if employee.is_active %}
+                  <span class="badge bg-label-success">Active</span>
+                {% else %}
+                  <span class="badge bg-label-danger">Inactive</span>
+                {% endif %}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <form method="post" class="mt-4">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-6">
+              <button type="submit" class="btn btn-danger w-100">
+                <i class="bx bx-trash me-2"></i>Delete Employee
+              </button>
+            </div>
+            <div class="col-6">
+              <a href="{% url 'employee_detail' employee.id %}" class="btn btn-outline-secondary w-100">
+                <i class="bx bx-arrow-back me-2"></i>Cancel
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .avatar-xl {
+    width: 5rem;
+    height: 5rem;
+  }
+  .bg-label-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  .bg-label-info {
+    background-color: rgba(10, 184, 255, 0.1);
+    color: #0ab8ff;
+  }
+  .bg-label-success {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+  .bg-label-warning {
+    background-color: rgba(251, 146, 60, 0.1);
+    color: #f97316;
+  }
+</style>
+{% endblock %}

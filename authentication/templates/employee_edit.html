@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ employee.get_full_name|default:employee.username }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Back Button -->
+  <div class="col-12">
+    <a href="{% url 'employee_detail' employee.id %}" class="btn btn-outline-secondary">
+      <i class="bx bx-arrow-back me-2"></i>Back to Employee
+    </a>
+  </div>
+
+  <!-- Edit Form -->
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="m-0">Edit Employee Information</h5>
+          <span class="badge bg-label-warning">Admin Only</span>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" class="needs-validation">
+          {% csrf_token %}
+          
+          <div class="alert alert-info mb-3">
+            <i class="bx bx-info-circle me-2"></i>
+            <strong>Current Employee:</strong> {{ employee.get_full_name|default:employee.username }} (@{{ employee.username }})
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="first_name" class="form-label">First Name</label>
+              <input type="text" class="form-control" id="first_name" name="first_name" value="{{ employee.first_name|default:'' }}" placeholder="Enter first name">
+            </div>
+            <div class="col-md-6">
+              <label for="last_name" class="form-label">Last Name</label>
+              <input type="text" class="form-control" id="last_name" name="last_name" value="{{ employee.last_name|default:'' }}" placeholder="Enter last name">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="email" class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="email" name="email" value="{{ employee.email|default:'' }}" placeholder="Enter email address">
+            </div>
+            <div class="col-md-6">
+              <label for="phone_number" class="form-label">Phone Number</label>
+              <input 
+                type="tel" 
+                class="form-control" 
+                id="phone_number" 
+                name="phone_number" 
+                value="{{ employee.phone_number|default:'' }}" 
+                placeholder="+923001234567"
+                pattern="^\+?[0-9\s\-\(\)]{7,15}$"
+                minlength="7"
+                maxlength="15"
+                title="Phone number must be 7-15 digits long. Use format: +923001234567 or 03001234567">
+              <small class="form-text text-muted">Format: +923001234567 or local format (7-15 digits)</small>
+              <div class="invalid-feedback d-block" id="phone_error" style="display:none;">
+                Please enter a valid phone number (7-15 digits, may include +, -, space, or parentheses)
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="role" class="form-label">Role</label>
+              <select class="form-select" id="role" name="role" required>
+                <option value="CASHIER" {% if employee.role == 'CASHIER' %}selected{% endif %}>Cashier</option>
+                <option value="ACCOUNTANT" {% if employee.role == 'ACCOUNTANT' %}selected{% endif %}>Accountant</option>
+                <option value="MAIN_CASHIER" {% if employee.role == 'MAIN_CASHIER' %}selected{% endif %}>Main Cashier</option>
+                <option value="CEO" {% if employee.role == 'CEO' %}selected{% endif %}>CEO</option>
+                <option value="HOST" {% if employee.role == 'HOST' %}selected{% endif %}>Host</option>
+                <option value="SALE" {% if employee.role == 'SALE' %}selected{% endif %}>Sale</option>
+                <option value="CUSTOMER" {% if employee.role == 'CUSTOMER' %}selected{% endif %}>Customer</option>
+                <option value="DRIVER" {% if employee.role == 'DRIVER' %}selected{% endif %}>Driver</option>
+                <option value="WAITER" {% if employee.role == 'WAITER' %}selected{% endif %}>Waiter</option>
+                <option value="HR_MANAGER" {% if employee.role == 'HR_MANAGER' %}selected{% endif %}>HR Manager</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="is_active" class="form-label">Status</label>
+              <div class="form-check form-switch mt-3">
+                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if employee.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="is_active">
+                  Active {% if employee.is_active %}<span class="badge bg-label-success ms-2">Currently Active</span>{% else %}<span class="badge bg-label-danger ms-2">Currently Inactive</span>{% endif %}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+          
+          <div class="row">
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-save me-2"></i>Save Changes
+              </button>
+              <a href="{% url 'employee_detail' employee.id %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Sidebar -->
+  <div class="col-12 col-lg-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="avatar avatar-xl bg-label-primary rounded mb-3" style="margin: 0 auto;">
+          <span class="avatar-initial rounded fw-bold" style="font-size: 2rem;">
+            {{ employee.username|first|upper }}
+          </span>
+        </div>
+        <h6 class="fw-bold">{{ employee.get_full_name|default:employee.username }}</h6>
+        <p class="text-muted small">@{{ employee.username }}</p>
+        
+        <div class="mt-4 text-start">
+          <p class="mb-2"><span class="fw-semibold">Username:</span> <span class="text-muted">{{ employee.username }}</span></p>
+          <p class="mb-2"><span class="fw-semibold">Current Role:</span> <span class="badge bg-label-info">{{ employee.get_role_display }}</span></p>
+          <p class="mb-2"><span class="fw-semibold">Joined:</span> <span class="text-muted">{{ employee.date_joined|date:"M d, Y" }}</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+  }
+  .avatar-xl {
+    width: 5rem;
+    height: 5rem;
+  }
+  .bg-label-primary {
+    background-color: rgba(105, 108, 255, 0.1);
+    color: #696cff;
+  }
+  .bg-label-info {
+    background-color: rgba(10, 184, 255, 0.1);
+    color: #0ab8ff;
+  }
+  .bg-label-warning {
+    background-color: rgba(251, 146, 60, 0.1);
+    color: #f97316;
+  }
+</style>
+
+<script>
+  // Phone number validation
+  document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone_number');
+    const phoneError = document.getElementById('phone_error');
+    const form = document.querySelector('form');
+    
+    if (!phoneInput) return;
+    
+    // Real-time validation feedback
+    phoneInput.addEventListener('input', function() {
+      validatePhoneNumber();
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+      if (phoneInput.value.trim() && !validatePhoneNumber()) {
+        e.preventDefault();
+        phoneInput.focus();
+        return false;
+      }
+    });
+    
+    function validatePhoneNumber() {
+      const value = phoneInput.value.trim();
+      
+      // If empty, it's optional so valid
+      if (!value) {
+        phoneInput.classList.remove('is-invalid');
+        phoneError.style.display = 'none';
+        return true;
+      }
+      
+      // Pattern: allows +, digits, spaces, dashes, parentheses
+      // Length: 7-15 characters (excluding special chars won't count towards limit)
+      const pattern = /^\+?[0-9\s\-\(\)]{7,15}$/;
+      const digitCount = value.replace(/\D/g, '').length;
+      
+      if (pattern.test(value) && digitCount >= 7 && digitCount <= 15) {
+        phoneInput.classList.remove('is-invalid');
+        phoneError.style.display = 'none';
+        return true;
+      } else {
+        phoneInput.classList.add('is-invalid');
+        phoneError.style.display = 'block';
+        return false;
+      }
+    }
+  });
+</script>
+{% endblock %}

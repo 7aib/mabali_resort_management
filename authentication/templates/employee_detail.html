@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}{{ employee.get_full_name|default:employee.username }} - Employee Details{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Back Button -->
+  <div class="col-12">
+    <a href="{% url 'employee_dashboard' %}" class="btn btn-outline-secondary">
+      <i class="bx bx-arrow-back me-2"></i>Back to Employees
+    </a>
+  </div>
+
+  <!-- Employee Card -->
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header border-bottom">
+        <h5 class="m-0">Employee Information</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex align-items-start gap-4">
+          <!-- Avatar Section -->
+          <div class="text-center">
+            <div class="avatar avatar-xl bg-label-primary rounded mb-3">
+              <span class="avatar-initial rounded fw-bold" style="font-size: 2rem;">
+                {{ employee.username|first|upper }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Employee Details -->
+          <div class="flex-grow-1">
+            <h6 class="mb-1 fw-bold">{{ employee.get_full_name|default:employee.username }}</h6>
+            <p class="text-muted mb-3">@{{ employee.username }}</p>
+            
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label text-muted">Email Address</label>
+                <p class="fw-medium">{{ employee.email|default:"Not provided" }}</p>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted">Phone Number</label>
+                <p class="fw-medium">{{ employee.phone_number|default:"—" }}</p>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label text-muted">Role</label>
+                <p class="fw-medium"><span class="badge bg-label-info">{{ employee.get_role_display }}</span></p>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted">Status</label>
+                <p class="fw-medium">
+                  {% if employee.is_active %}
+                    <span class="badge bg-label-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-label-danger">Inactive</span>
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label text-muted">Joined Date</label>
+                <p class="fw-medium">{{ employee.date_joined|date:"M d, Y" }}</p>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted">Last Modified</label>
+                <p class="fw-medium">{{ employee.updated_at|date:"M d, Y H:i" }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Permissions Card -->
+    <div class="card mt-4">
+      <div class="card-header border-bottom">
+        <h5 class="m-0">Permissions & Access</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              {% if employee.is_superuser %}
+                <i class="bx bx-check-circle text-success"></i>
+                <span>Administrator</span>
+              {% else %}
+                <i class="bx bx-x-circle text-muted"></i>
+                <span class="text-muted">Regular Employee</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              {% if employee.is_staff %}
+                <i class="bx bx-check-circle text-success"></i>
+                <span>Staff Access</span>
+              {% else %}
+                <i class="bx bx-x-circle text-muted"></i>
+                <span class="text-muted">No Staff Access</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="col-12 col-lg-4">
+    <div class="card">
+      <div class="card-header border-bottom">
+        <h5 class="m-0">Quick Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="list-group list-group-flush">
+          {% if request.user.role == 'CEO' or request.user.role == 'HR_MANAGER' %}
+          <a href="{% url 'employee_edit' employee.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0 py-3 border-0">
+            <span><i class="bx bx-edit me-2"></i>Edit Employee</span>
+            <i class="bx bx-chevron-right"></i>
+          </a>
+          <a href="{% url 'employee_delete' employee.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0 py-3 border-0 text-danger" onclick="return confirm('Are you sure you want to delete this employee? This action cannot be undone.');">
+            <span><i class="bx bx-trash me-2"></i>Delete Employee</span>
+            <i class="bx bx-chevron-right"></i>
+          </a>
+          {% else %}
+          <div class="alert alert-info mb-0">
+            <i class="bx bx-info-circle me-2"></i>
+            <span>Only CEO and HR Manager can edit or delete employees.</span>
+          </div>
+          {% endif %}
+          <a href="{% url 'employee_dashboard' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0 py-3 border-0">
+            <span><i class="bx bx-arrow-back me-2"></i>Back to List</span>
+            <i class="bx bx-chevron-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card mt-4">
+      <div class="card-body text-center">
+        <i class="bx bx-info-circle" style="font-size: 2.5rem; color: #696cff;"></i>
+        <h6 class="mt-3 fw-bold">Employee Details</h6>
+        <p class="text-muted small mb-0">
+          View and manage employee information from here.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .avatar-xl {
+    width: 5rem;
+    height: 5rem;
+  }
+  .bg-label-primary {
+    background-color: rgba(105, 108, 255, 0.1);
+    color: #696cff;
+  }
+  .bg-label-info {
+    background-color: rgba(10, 184, 255, 0.1);
+    color: #0ab8ff;
+  }
+  .bg-label-success {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+  .bg-label-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  .list-group-item {
+    color: inherit;
+  }
+  .list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+</style>
+{% endblock %}
