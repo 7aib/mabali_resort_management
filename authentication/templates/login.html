@@ -140,30 +140,13 @@
             <div class="card-body p-4 p-lg-5">
               <h2 class="h4 mb-4 text-center">Sign in</h2>
 
-              {% if messages %} {% for message in messages %}
-              <div class="alert alert-{{ message.tags }} mb-3" role="alert">
-                {{ message }}
-              </div>
-              {% endfor %} {% endif %}
+              {% include 'components/forms/form_errors.html' %}
 
               <form method="post" novalidate>
                 {% csrf_token %}
-                <div class="mb-3">
-                  <label for="id_username" class="form-label">Username</label>
-                  {{ form.username }} {% if form.username.errors %}
-                  <div class="invalid-feedback d-block">
-                    {{ form.username.errors|striptags }}
-                  </div>
-                  {% endif %}
-                </div>
-                <div class="mb-4">
-                  <label for="id_password" class="form-label">Password</label>
-                  {{ form.password }} {% if form.password.errors %}
-                  <div class="invalid-feedback d-block">
-                    {{ form.password.errors|striptags }}
-                  </div>
-                  {% endif %}
-                </div>
+                {% include 'components/forms/input.html' with type="text" id="id_username" name="username" label="Username" value=form.username.value|default:'' error_id="username_error" error_msg=form.username.errors|striptags required=True %}
+                
+                {% include 'components/forms/input.html' with type="password" id="id_password" name="password" label="Password" error_id="password_error" error_msg=form.password.errors|striptags required=True %}
                 <button type="submit" class="btn btn-dark w-100">
                   Continue
                 </button>

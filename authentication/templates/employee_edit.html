@@ -20,14 +20,7 @@
         </div>
       </div>
       <div class="card-body">
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
+
 
         <form method="post" class="needs-validation">
           {% csrf_token %}
@@ -39,64 +32,28 @@
           
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="first_name" class="form-label">First Name</label>
-              <input type="text" class="form-control" id="first_name" name="first_name" value="{{ employee.first_name|default:'' }}" placeholder="Enter first name">
+              {% include 'components/forms/input.html' with id="first_name" label="First Name" value=employee.first_name placeholder="Enter first name" %}
             </div>
             <div class="col-md-6">
-              <label for="last_name" class="form-label">Last Name</label>
-              <input type="text" class="form-control" id="last_name" name="last_name" value="{{ employee.last_name|default:'' }}" placeholder="Enter last name">
+              {% include 'components/forms/input.html' with id="last_name" label="Last Name" value=employee.last_name placeholder="Enter last name" %}
             </div>
           </div>
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="email" class="form-label">Email Address</label>
-              <input type="email" class="form-control" id="email" name="email" value="{{ employee.email|default:'' }}" placeholder="Enter email address">
+              {% include 'components/forms/input.html' with type="email" id="email" label="Email Address" value=employee.email placeholder="Enter email address" %}
             </div>
             <div class="col-md-6">
-              <label for="phone_number" class="form-label">Phone Number</label>
-              <input 
-                type="tel" 
-                class="form-control" 
-                id="phone_number" 
-                name="phone_number" 
-                value="{{ employee.phone_number|default:'' }}" 
-                placeholder="+923001234567"
-                pattern="^\+?[0-9\s\-\(\)]{7,15}$"
-                minlength="7"
-                maxlength="15"
-                title="Phone number must be 7-15 digits long. Use format: +923001234567 or 03001234567">
-              <small class="form-text text-muted">Format: +923001234567 or local format (7-15 digits)</small>
-              <div class="invalid-feedback d-block" id="phone_error" style="display:none;">
-                Please enter a valid phone number (7-15 digits, may include +, -, space, or parentheses)
-              </div>
+              {% include 'components/forms/input.html' with type="tel" id="phone_number" label="Phone Number" value=employee.phone_number placeholder="+923001234567" pattern="^\+?[0-9\s\-\(\)]{7,15}$" minlength="7" maxlength="15" title="Phone number must be 7-15 digits long. Use format: +923001234567 or 03001234567" help_text="Format: +923001234567 or local format (7-15 digits)" error_id="phone_error" error_msg="Please enter a valid phone number (7-15 digits, may include +, -, space, or parentheses)" %}
             </div>
           </div>
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="role" class="form-label">Role</label>
-              <select class="form-select" id="role" name="role" required>
-                <option value="CASHIER" {% if employee.role == 'CASHIER' %}selected{% endif %}>Cashier</option>
-                <option value="ACCOUNTANT" {% if employee.role == 'ACCOUNTANT' %}selected{% endif %}>Accountant</option>
-                <option value="MAIN_CASHIER" {% if employee.role == 'MAIN_CASHIER' %}selected{% endif %}>Main Cashier</option>
-                <option value="CEO" {% if employee.role == 'CEO' %}selected{% endif %}>CEO</option>
-                <option value="HOST" {% if employee.role == 'HOST' %}selected{% endif %}>Host</option>
-                <option value="SALE" {% if employee.role == 'SALE' %}selected{% endif %}>Sale</option>
-                <option value="CUSTOMER" {% if employee.role == 'CUSTOMER' %}selected{% endif %}>Customer</option>
-                <option value="DRIVER" {% if employee.role == 'DRIVER' %}selected{% endif %}>Driver</option>
-                <option value="WAITER" {% if employee.role == 'WAITER' %}selected{% endif %}>Waiter</option>
-                <option value="HR_MANAGER" {% if employee.role == 'HR_MANAGER' %}selected{% endif %}>HR Manager</option>
-              </select>
+              {% include 'components/forms/select.html' with id="role" label="Role" options=roles current_value=employee.role required=True %}
             </div>
             <div class="col-md-6">
-              <label for="is_active" class="form-label">Status</label>
-              <div class="form-check form-switch mt-3">
-                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if employee.is_active %}checked{% endif %}>
-                <label class="form-check-label" for="is_active">
-                  Active {% if employee.is_active %}<span class="badge bg-label-success ms-2">Currently Active</span>{% else %}<span class="badge bg-label-danger ms-2">Currently Inactive</span>{% endif %}
-                </label>
-              </div>
+              {% include 'components/forms/toggle.html' with id="is_active" label="Status" label_text="Active" checked=employee.is_active active_badge="Currently Active" inactive_badge="Currently Inactive" %}
             </div>
           </div>
 

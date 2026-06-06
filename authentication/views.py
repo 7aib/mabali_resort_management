@@ -136,12 +136,12 @@ def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
         
         if not is_valid:
             messages.error(request, f"Phone Number Error: {error_msg}")
-            return render(request, "employee_edit.html", {"employee": employee})
+            return render(request, "employee_edit.html", {"employee": employee, "roles": UserRoles.choices})
             
         # Check if phone number is already taken
         if phone_number and _check_phone_number_exists(phone_number, exclude_user_id=employee.id):
             messages.error(request, "Phone Number Error: This phone number is already registered to another user.")
-            return render(request, "employee_edit.html", {"employee": employee})
+            return render(request, "employee_edit.html", {"employee": employee, "roles": UserRoles.choices})
         
         try:
             employee.save()
@@ -149,9 +149,9 @@ def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
             return redirect("employee_detail", pk=employee.id)
         except IntegrityError as e:
             messages.error(request, "Error: Another employee might already be using this email or username.")
-            return render(request, "employee_edit.html", {"employee": employee})
+            return render(request, "employee_edit.html", {"employee": employee, "roles": UserRoles.choices})
     
-    return render(request, "employee_edit.html", {"employee": employee})
+    return render(request, "employee_edit.html", {"employee": employee, "roles": UserRoles.choices})
 
 
 @login_required

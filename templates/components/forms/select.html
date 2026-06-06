@@ -1,0 +1,8 @@
+<div class="mb-3">
+  <label for="{{ id }}" class="form-label">{{ label }}</label>
+  <select class="form-select" id="{{ id }}" name="{{ name|default:id }}" {% if required %}required{% endif %}>
+    {% for val, text in options %}
+    <option value="{{ val }}" {% if val == current_value %}selected{% endif %}>{{ text }}</option>
+    {% endfor %}
+  </select>
+</div>
