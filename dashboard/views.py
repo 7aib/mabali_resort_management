@@ -4,14 +4,15 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.db.models import Sum, Count
 
 from authentication.choices import UserRoles
+from cash_counters.models import EntryCounterForm, EntryTransaction
 
 
 @login_required
 def dashboard_view(request: HttpResponse) -> HttpResponse:
     """Display the main dashboard with financial and operational metrics."""
-    # Dummy data; replace with real queries later
     today = date.today()
 
     counters = [
@@ -24,11 +25,15 @@ def dashboard_view(request: HttpResponse) -> HttpResponse:
         c["pos"] for c in counters if c["name"].lower() != "parasailing"
     )
 
+    # ── Live guest entry stats for today ──
+    today_entries = EntryCounterForm.objects.filter(created_at__date=today)
+    total_adults = today_entries.aggregate(s=Sum('no_of_persons'))['s'] or 0
+    total_kids   = today_entries.aggregate(s=Sum('no_of_kids'))['s'] or 0
     guest_entry = {
-        "date": today,
-        "adults": 120,
-        "kids": 35,
-        "total": 155,
+        "date":   today,
+        "adults": total_adults,
+        "kids":   total_kids,
+        "total":  total_adults + total_kids,
     }
 
     avg_spend_per_person = round(
@@ -87,6 +92,14 @@ def dashboard_view(request: HttpResponse) -> HttpResponse:
         {"type": "Refund", "title": "Meal Refund", "amount": 2500},
     ]
 
+    # ── Live transaction history (last 10 today) ──
+    recent_transactions = (
+        EntryTransaction.objects
+        .filter(created_at__date=today)
+        .select_related('entry_form__customer')
+        .order_by('-created_at')[:10]
+    )
+
     # Role-based visibility for amounts (CEO, ACCOUNTANT)
     user_role = getattr(request.user, "role", None)
     can_view_amounts = user_role in (UserRoles.CEO, UserRoles.ACCOUNTANT)
@@ -103,6 +116,7 @@ def dashboard_view(request: HttpResponse) -> HttpResponse:
         "room_bookings": room_bookings,
         "events_today": events_today,
         "expense_refunds": expense_refunds,
+        "recent_transactions": recent_transactions,
         "can_view_amounts": can_view_amounts,
     }
     return render(request, "dashboard/index.html", context)

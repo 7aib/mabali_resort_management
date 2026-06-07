@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "authentication",
     "dashboard",
     "inventory",
+    "cash_counters",
 ]
 
 MIDDLEWARE = [

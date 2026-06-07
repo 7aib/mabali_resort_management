@@ -4,7 +4,7 @@
     class="layout-menu menu-vertical menu bg-menu-theme"
   >
     <div class="app-brand demo">
-      <a href="index.html" class="app-brand-link">
+      <a href="{% url "dashboard" %}" class="app-brand-link">
         <span class="app-brand-logo demo">
           <img src="{% static 'logo/mabali-icon.png' %}" width="25" height="25" alt="Mabali logo" />
         </span>
@@ -67,8 +67,13 @@
           <div data-i18n="Cash Counters">Cash Counters</div>
         </a>
         <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="Coming soon">
+          <li class="menu-item {% if request.resolver_match.url_name == 'entry_form' %}active{% endif %}">
+            <a href="{% url 'cash_counters:entry_form' %}" class="menu-link">
+              <div data-i18n="New Guest Entry">New Guest Entry</div>
+            </a>
+          </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'daily_sales' %}active{% endif %}">
+            <a href="{% url 'cash_counters:daily_sales' %}" class="menu-link">
               <div data-i18n="Daily Sales">Daily Sales</div>
             </a>
           </li>

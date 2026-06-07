@@ -1,0 +1,45 @@
+<!--
+  Reusable radio button group component.
+
+  Parameters:
+    name        (required) — form field name
+    label       (required) — group label shown above the radios
+    options     (required) — list of (value, display_label) tuples, same shape as TextChoices.choices
+    selected    (optional) — value of the currently selected option (pre-selects on render)
+    help_text   (optional) — small helper text shown below the group
+    inline      (optional) — if truthy, renders radios side-by-side (default: inline)
+
+  Usage:
+    {% include "components/forms/radio.html" with
+        name="payment_method"
+        label="Payment Method"
+        options=payment_methods
+        selected="Cash"
+        help_text="Choose how the guest is paying."
+    %}
+-->
+<div class="mb-3">
+  {% if label %}
+  <label class="form-label">{{ label }}</label>
+  {% endif %}
+  <div class="d-flex flex-wrap gap-3">
+    {% for val, text in options %}
+    <div class="form-check {% if not inline == False %}form-check-inline{% endif %}">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="{{ name }}"
+        id="radio_{{ name }}_{{ val|slugify }}"
+        value="{{ val }}"
+        {% if val == selected or forloop.first and not selected %}checked{% endif %}
+      >
+      <label class="form-check-label" for="radio_{{ name }}_{{ val|slugify }}">
+        {{ text }}
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  {% if help_text %}
+  <small class="form-text text-muted">{{ help_text }}</small>
+  {% endif %}
+</div>
