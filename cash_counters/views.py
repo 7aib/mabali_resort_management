@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from authentication.choices import UserRoles
-from .models import EntryCounterForm, EntryTransaction
-from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices
+from .models import EntryCounterForm, EntryTransaction, CashHandover
+from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices, CounterTypeChoices
 from mabali_resort_management.constants import PAID_VISIT_PRICE
 
 User = get_user_model()
@@ -102,3 +102,64 @@ def check_customer_status(request):
             'name': user.get_full_name() or user.first_name or user.username
         })
     return JsonResponse({'status': 'New', 'name': ''})
+
+
+@login_required
+def cash_handover_view(request):
+    today = timezone.now().date()
+    
+    # Get cashiers and main cashiers for the dropdowns
+    cashiers = User.objects.filter(
+        role__in=[UserRoles.CASHIER, UserRoles.MAIN_CASHIER],
+        is_active=True
+    ).order_by('first_name', 'username')
+    
+    main_cashiers = User.objects.filter(
+        role=UserRoles.MAIN_CASHIER,
+        is_active=True
+    ).order_by('first_name', 'username')
+    
+    if request.method == 'POST':
+        date = request.POST.get('date')
+        counter_type = request.POST.get('counter_type')
+        cashier_id = request.POST.get('cashier')
+        cash_amount = request.POST.get('cash_amount')
+        handover_to_id = request.POST.get('handover_to')
+        notes = request.POST.get('notes', '')
+        
+        if not date or not counter_type or not cashier_id or not cash_amount or not handover_to_id:
+            messages.error(request, 'All required fields must be filled.')
+            return redirect('cash_counters:cash_handover')
+        
+        try:
+            cashier = User.objects.get(id=cashier_id)
+            handover_to = User.objects.get(id=handover_to_id)
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid user selected.')
+            return redirect('cash_counters:cash_handover')
+        
+        CashHandover.objects.create(
+            date=date,
+            counter_type=counter_type,
+            cashier=cashier,
+            cash_amount=cash_amount,
+            handover_to=handover_to,
+            notes=notes
+        )
+        
+        messages.success(request, 'Cash handover recorded successfully.')
+        return redirect('cash_counters:cash_handover')
+    
+    # Get today's handovers
+    today_handovers = CashHandover.objects.filter(
+        date=today
+    ).select_related('cashier', 'handover_to').order_by('-created_at')
+    
+    context = {
+        'counter_types': CounterTypeChoices.choices,
+        'cashiers': cashiers,
+        'main_cashiers': main_cashiers,
+        'today_handovers': today_handovers,
+        'today': today,
+    }
+    return render(request, 'cash_counters/cash_handover.html', context)
