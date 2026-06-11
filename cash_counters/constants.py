@@ -43,3 +43,4 @@ class CounterTypeChoices(models.TextChoices):
     TUCK_SHOP_MAIN = 'Tuck Shop (Main)', 'Tuck Shop (Main)'
     NIGHT_STAY = 'Night Stay', 'Night Stay'
     GROUP_EVENT = 'Group/Event', 'Group/Event'
+    AUCTION = 'Auction', 'Auction'

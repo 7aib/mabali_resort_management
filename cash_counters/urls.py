@@ -8,4 +8,5 @@ urlpatterns = [
     path('cash-counters/daily-sales/', views.daily_sales_view, name='daily_sales'),
     path('cash-counters/check-customer/', views.check_customer_status, name='check_customer'),
     path('cash-counters/cash-handover/', views.cash_handover_view, name='cash_handover'),
+    path('cash-counters/cash-register/', views.cash_register_view, name='cash_register'),
 ]

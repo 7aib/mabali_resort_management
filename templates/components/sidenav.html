@@ -62,7 +62,7 @@
 
       <!-- Cash Counters - CEO, Cashier, Main Cashier and HR Manager only -->
       {% if request.user.role == 'CEO' or request.user.role == 'CASHIER' or request.user.role == 'MAIN_CASHIER' or request.user.role == 'HR_MANAGER' %}
-      <li class="menu-item {% if request.resolver_match.url_name == 'entry_form' or request.resolver_match.url_name == 'daily_sales' or request.resolver_match.url_name == 'cash_handover' %}open{% endif %}">
+      <li class="menu-item {% if request.resolver_match.url_name == 'entry_form' or request.resolver_match.url_name == 'daily_sales' or request.resolver_match.url_name == 'cash_handover' or request.resolver_match.url_name == 'cash_register' %}open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-calculator"></i>
           <div data-i18n="Cash Counters">Cash Counters</div>
@@ -83,8 +83,8 @@
               <div data-i18n="Cash Handover">Cash Handover</div>
             </a>
           </li>
-          <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="Coming soon">
+          <li class="menu-item {% if request.resolver_match.url_name == 'cash_register' %}active{% endif %}">
+            <a href="{% url 'cash_counters:cash_register' %}" class="menu-link">
               <div data-i18n="Cash Register">Cash Register</div>
             </a>
           </li>

@@ -41,3 +41,19 @@ class CashHandover(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 
     def __str__(self):
         return f"Handover: {self.cashier.get_full_name() or self.cashier.username} - {self.counter_type} - Rs. {self.cash_amount}"
+
+
+class CashRegister(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    date = models.DateField(default=timezone.now)
+    counter_type = models.CharField(max_length=50, choices=CounterTypeChoices.choices)
+    amount_received = models.DecimalField(max_digits=12, decimal_places=2)
+    received_from = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cash_register_given')
+    on_duty_cashier = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cash_register_entries')
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Cash Register entries'
+
+    def __str__(self):
+        return f"Cash Register: {self.counter_type} - Rs. {self.amount_received} on {self.date}"

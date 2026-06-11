@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from authentication.choices import UserRoles
-from .models import EntryCounterForm, EntryTransaction, CashHandover
+from .models import EntryCounterForm, EntryTransaction, CashHandover, CashRegister
 from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices, CounterTypeChoices
 from mabali_resort_management.constants import PAID_VISIT_PRICE
 
@@ -163,3 +163,58 @@ def cash_handover_view(request):
         'today': today,
     }
     return render(request, 'cash_counters/cash_handover.html', context)
+
+
+@login_required
+def cash_register_view(request):
+    today = timezone.now().date()
+    
+    # Get cashiers for the dropdowns
+    cashiers = User.objects.filter(
+        role__in=[UserRoles.CASHIER, UserRoles.MAIN_CASHIER],
+        is_active=True
+    ).order_by('first_name', 'username')
+    
+    if request.method == 'POST':
+        date = request.POST.get('date')
+        counter_type = request.POST.get('counter_type')
+        amount_received = request.POST.get('amount_received')
+        received_from_id = request.POST.get('received_from')
+        on_duty_cashier_id = request.POST.get('on_duty_cashier')
+        notes = request.POST.get('notes', '')
+        
+        if not date or not counter_type or not amount_received or not received_from_id or not on_duty_cashier_id:
+            messages.error(request, 'All required fields must be filled.')
+            return redirect('cash_counters:cash_register')
+        
+        try:
+            received_from = User.objects.get(id=received_from_id)
+            on_duty_cashier = User.objects.get(id=on_duty_cashier_id)
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid user selected.')
+            return redirect('cash_counters:cash_register')
+        
+        CashRegister.objects.create(
+            date=date,
+            counter_type=counter_type,
+            amount_received=amount_received,
+            received_from=received_from,
+            on_duty_cashier=on_duty_cashier,
+            notes=notes
+        )
+        
+        messages.success(request, 'Cash register entry recorded successfully.')
+        return redirect('cash_counters:cash_register')
+    
+    # Get today's entries
+    today_entries = CashRegister.objects.filter(
+        date=today
+    ).select_related('received_from', 'on_duty_cashier').order_by('-created_at')
+    
+    context = {
+        'counter_types': CounterTypeChoices.choices,
+        'cashiers': cashiers,
+        'today_entries': today_entries,
+        'today': today,
+    }
+    return render(request, 'cash_counters/cash_register.html', context)
