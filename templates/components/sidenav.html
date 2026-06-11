@@ -22,8 +22,8 @@
     </div>
 
     <div class="menu-inner-shadow"></div>
-    {% if request.user.is_superuser %}
     <ul class="menu-inner py-1">
+    {% if request.user.is_superuser %}
       <!-- Dashboard -->
       <li class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
         <a href="{% url 'dashboard' %}" class="menu-link">

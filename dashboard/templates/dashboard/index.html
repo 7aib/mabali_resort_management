@@ -242,9 +242,9 @@
           </div>
           <div class="col-6 col-md-3">
             <div class="d-flex flex-column align-items-center">
-              <i class="bx bx-shield-check fs-3 text-primary mb-2"></i>
+              <i class="bx bx-user-circle fs-3 text-primary mb-2"></i>
               <small class="text-muted">Access Level</small>
-              <span class="fw-semibold">User</span>
+              <span class="fw-semibold"><i class="bx bx-user me-1"></i>{{ request.user.get_role_display|default:"User" }}</span>
             </div>
           </div>
         </div>
