@@ -6,10 +6,10 @@
     <div class="app-brand demo">
       <a href="{% url "dashboard" %}" class="app-brand-link">
         <span class="app-brand-logo demo">
-          <img src="{% static 'logo/mabali-icon.png' %}" width="25" height="25" alt="Mabali logo" />
+          <img src="{% static LOGO_ICON %}" width="25" height="25" alt="{{ PROJECT_NAME }} logo" />
         </span>
         <span class="app-brand-text demo menu-text fw-bolder ms-2"
-          >Mabali</span
+          >{{ LOGO_TEXT }}</span
         >
       </a>
 

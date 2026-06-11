@@ -16,7 +16,7 @@
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
     />
 
-    <title>{% block title %}Mabali Resort Management System{% endblock %}</title>
+    <title>{% block title %}{{ PROJECT_FULL_NAME }}{% endblock %}</title>
 
     <meta name="description" content="" />
 
@@ -24,7 +24,7 @@
     <link
       rel="icon"
       type="image/x-icon"
-      href="{% static 'logo/mabali-icon.png' %}"
+      href="{% static LOGO_ICON %}"
     />
 
     <!-- Fonts -->

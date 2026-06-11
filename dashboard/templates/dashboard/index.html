@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - Mabali{% endblock %}
+{% block title %}Dashboard - {{ PROJECT_NAME }}{% endblock %}
 
 {% block content %}
 {% if request.user.is_superuser %}
@@ -215,7 +215,7 @@
         <div class="mb-4">
           <i class="bx bx-user-circle display-1 text-primary"></i>
         </div>
-        <h2 class="mb-3">Welcome to Mabali Resort</h2>
+        <h2 class="mb-3">Welcome to {{ PROJECT_NAME }}</h2>
         <h4 class="text-muted mb-4">Hello, {{ request.user.get_full_name|default:request.user.username }}!</h4>
         <p class="lead mb-4">You are successfully logged into the resort management system.</p>
         <div class="row g-3 mt-4">
