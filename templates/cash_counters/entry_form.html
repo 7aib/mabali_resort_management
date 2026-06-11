@@ -65,7 +65,7 @@
 
         <!-- ① Phone Number + live status badge -->
         <div class="col-12 col-md-4">
-          {% include "components/forms/input.html" with id="id_phone_number" name="phone_number" label="Phone Number *" type="tel" placeholder="+923001234567" required=True %}
+          {% include "components/forms/input.html" with id="id_phone_number" name="phone_number" value=employee.phone_number|default:'+92' label="Phone Number *" type="tel" placeholder="+923001234567" required=True %}
           <!-- Reusable status badge — JS will update its class/text dynamically -->
           <div class="mt-n2 mb-2">
             {% include "components/forms/status_badge.html" with badge_id="statusBadge" idle_text="Enter phone to detect status" %}

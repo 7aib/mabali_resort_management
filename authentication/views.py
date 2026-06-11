@@ -8,13 +8,9 @@ import re
 
 from authentication.models import User
 from authentication.choices import UserRoles
+from mabali_resort_management.decorators import roles_required
 
 from .forms import LoginForm
-
-
-def _check_edit_permission(user):
-    """Check if user has permission to edit/delete employees."""
-    return user.role in (UserRoles.CEO, UserRoles.HR_MANAGER)
 
 
 def _validate_phone_number(phone_number: str) -> tuple[bool, str]:
@@ -91,6 +87,7 @@ def logout_view(request: HttpResponse) -> HttpResponse:
     return redirect("login")
 
 @login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
 def employee_dashboard(request: HttpResponse) -> HttpResponse:
     """Display a list of employees excluding CEO users."""
     employees = User.objects.exclude(role=UserRoles.CEO)
@@ -102,6 +99,84 @@ def profile_view(request: HttpResponse) -> HttpResponse:
     """Display the current user's profile."""
     return render(request, "profile.html")
 
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
+from django.shortcuts import render, redirect
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.HR_MANAGER)
+def employee_create(request):
+    """Create a new employee."""
+
+    if request.method == "POST":
+        first_name = request.POST.get("first_name", "").strip()
+        last_name = request.POST.get("last_name", "").strip()
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        role = request.POST.get("role", UserRoles.CUSTOMER).strip()
+        password = request.POST.get("password", "")
+        phone_number = request.POST.get("phone_number", "").strip()
+
+        # Create an unsaved user object so entered data is retained on errors
+        employee = User(
+            first_name=first_name,
+            last_name=last_name,
+            username=username,
+            email=email,
+            role=role,
+            phone_number=phone_number if phone_number else None,
+            is_active=True,
+        )
+
+        # Validate phone number
+        is_valid, error_msg = _validate_phone_number(phone_number)
+        if not is_valid:
+            messages.error(request, f"Phone Number Error: {error_msg}")
+            return render(
+                request,
+                "employee_create.html",
+                {"employee": employee, "roles": UserRoles.choices},
+            )
+
+        # Check phone number uniqueness
+        if phone_number and _check_phone_number_exists(phone_number):
+            messages.error(
+                request,
+                "Phone Number Error: This phone number is already registered to another user.",
+            )
+            return render(
+                request,
+                "employee_create.html",
+                {"employee": employee, "roles": UserRoles.choices},
+            )
+
+        try:
+            employee.password = make_password(password)
+            employee.save()
+
+            messages.success(
+                request,
+                f"Employee '{employee.username}' created successfully."
+            )
+            return redirect("employee_detail", pk=employee.id)
+
+        except IntegrityError:
+            messages.error(
+                request,
+                "Error: Username, email, or phone number already exists."
+            )
+            return render(
+                request,
+                "employee_create.html",
+                {"employee": employee, "roles": UserRoles.choices},
+            )
+
+    return render(
+        request,
+        "employee_create.html",
+        {"roles": UserRoles.choices},
+    )
 
 @login_required
 def employee_detail(request: HttpResponse, pk: int) -> HttpResponse:
@@ -111,14 +186,10 @@ def employee_detail(request: HttpResponse, pk: int) -> HttpResponse:
 
 
 @login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
 def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
     """Edit a specific employee's details. Only CEO and HR Manager can edit."""
     employee = get_object_or_404(User, pk=pk)
-    
-    # Check permission
-    if not _check_edit_permission(request.user):
-        messages.error(request, "You don't have permission to edit employees. Only CEO and HR Manager can perform this action.")
-        return redirect("employee_detail", pk=pk)
     
     if request.method == "POST":
         # Update employee object with submitted data so the form retains it on error
@@ -155,14 +226,10 @@ def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
 
 
 @login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
 def employee_delete(request: HttpResponse, pk: int) -> HttpResponse:
     """Delete a specific employee. Only CEO and HR Manager can delete."""
     employee = get_object_or_404(User, pk=pk)
-    
-    # Check permission
-    if not _check_edit_permission(request.user):
-        messages.error(request, "You don't have permission to delete employees. Only CEO and HR Manager can perform this action.")
-        return redirect("employee_detail", pk=pk)
     
     if request.method == "POST":
         username = employee.username
