@@ -7,4 +7,5 @@ urlpatterns = [
     path("", include("dashboard.urls")),
     path("inventory/", include("inventory.urls")),
     path("", include("cash_counters.urls")),
+    path("", include("finance.urls")),
 ]

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "dashboard",
     "inventory",
     "cash_counters",
+    "finance",
 ]
 
 MIDDLEWARE = [
