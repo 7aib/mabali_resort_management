@@ -1,9 +1,10 @@
 """Inventory management models."""
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 
 from authentication.models import User
-from .choices import AmmoCaliberChoices, AssetCategoryChoices, GeneratorCapacityChoices, HospitalChoices, StockStatusChoices, FuelTypeChoices
+from .choices import AmmoCaliberChoices, AssetCategoryChoices, GeneratorCapacityChoices, HospitalChoices, StockStatusChoices, FuelTypeChoices, PatientTypeChoices, FuelStatusChoices, VehicleChoices, AmmoStatusChoices, AmmoPaymentChoices
 from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteModelMixin
 
 
@@ -79,6 +80,9 @@ class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     """Log ambulance trips including distance and medical expenses."""
 
+    date = models.DateField(default=timezone.now)
+    patient_name = models.CharField(max_length=150, default='')
+    patient_type = models.CharField(max_length=20, choices=PatientTypeChoices.choices, default=PatientTypeChoices.LOCAL)
     ambulance = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ambulance_logs')
     start_reading_km = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     end_reading_km = models.PositiveIntegerField(validators=[MinValueValidator(0)])
@@ -86,6 +90,10 @@ class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     hospital = models.CharField(max_length=30, choices=HospitalChoices.choices)
     driver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ambulance_drives')
     notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Ambulance Logs'
 
     @property
     def kms_travelled(self):
@@ -101,4 +109,41 @@ class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 
     def __str__(self) -> str:
         """Return string representation of ambulance log."""
-        return f"{self.ambulance.name} {self.created_at.date()} - {self.kms_travelled}km"
+        return f"{self.patient_name} - {self.hospital} on {self.date}"
+
+
+class FuelEntry(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Fuel purchase and issuance log."""
+
+    date = models.DateField(default=timezone.now)
+    fuel_type = models.CharField(max_length=20, choices=FuelTypeChoices.choices)
+    status = models.CharField(max_length=20, choices=FuelStatusChoices.choices)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    issued_to = models.CharField(max_length=50, choices=VehicleChoices.choices, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Fuel Entries'
+
+    def __str__(self) -> str:
+        return f"{self.fuel_type} - {self.status} - {self.quantity}L on {self.date}"
+
+
+class AmmoEntry(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Shooting range ammunition entry log."""
+
+    date = models.DateField(default=timezone.now)
+    bullet_type = models.CharField(max_length=10, choices=AmmoCaliberChoices.choices)
+    bullet_status = models.CharField(max_length=20, choices=AmmoStatusChoices.choices)
+    bullet_quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    payment = models.CharField(max_length=20, choices=AmmoPaymentChoices.choices)
+    free_bullet_reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Ammo Entries'
+
+    def __str__(self) -> str:
+        return f"{self.bullet_type} - {self.bullet_status} - {self.bullet_quantity} rounds on {self.date}"

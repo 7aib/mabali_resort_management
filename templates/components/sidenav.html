@@ -148,15 +148,40 @@
       </li>
 
       <!-- Inventory -->
-      <li class="menu-item">
+      <li class="menu-item {% if request.resolver_match.url_name == 'generator_log' or request.resolver_match.url_name == 'item_list' or request.resolver_match.url_name == 'item_create' or request.resolver_match.url_name == 'ambulance_log' or request.resolver_match.url_name == 'fuel_entry' or request.resolver_match.url_name == 'ammo_entry' %}open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-package"></i>
           <div data-i18n="Inventory">Inventory</div>
         </a>
         <ul class="menu-sub">
-          <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="Coming soon">
+          <li class="menu-item {% if request.resolver_match.url_name == 'item_list' %}active{% endif %}">
+            <a href="{% url 'inventory:item_list' %}" class="menu-link">
               <div data-i18n="Items">Items</div>
+            </a>
+          </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'item_create' %}active{% endif %}">
+            <a href="{% url 'inventory:item_create' %}" class="menu-link">
+              <div data-i18n="Add Item">Add Item</div>
+            </a>
+          </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'fuel_entry' %}active{% endif %}">
+            <a href="{% url 'inventory:fuel_entry' %}" class="menu-link">
+              <div data-i18n="Fuel Entry">Fuel Entry</div>
+            </a>
+          </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'ammo_entry' %}active{% endif %}">
+            <a href="{% url 'inventory:ammo_entry' %}" class="menu-link">
+              <div data-i18n="Ammo Entry">Ammo Entry</div>
+            </a>
+          </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'generator_log' %}active{% endif %}">
+            <a href="{% url 'inventory:generator_log' %}" class="menu-link">
+              <div data-i18n="Generator Log">Generator Log</div>
+            </a>
+          </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'ambulance_log' %}active{% endif %}">
+            <a href="{% url 'inventory:ambulance_log' %}" class="menu-link">
+              <div data-i18n="Ambulance Log">Ambulance Log</div>
             </a>
           </li>
           <li class="menu-item">

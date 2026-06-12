@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ammo Entry — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .form-card,
+  .history-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .form-card .card-header,
+  .history-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .form-card .card-header,
+  .dark-style .history-card .card-header { border-bottom-color: #3a3b55; }
+  .history-card { margin-top: 28px; }
+
+  .submit-btn { min-width: 160px; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-crosshair me-2"></i> Shooting Range - Ammo Entry</h4>
+    <p>Record ammunition usage and inventory</p>
+  </div>
+  <div class="text-end d-none d-md-block">
+    <div style="font-size:2rem; opacity:.6;">🎯</div>
+    <small>{{ PROJECT_NAME }}</small>
+  </div>
+</div>
+
+<!-- Ammo Entry Form Card -->
+<div class="card form-card">
+  <div class="card-header d-flex align-items-center gap-2">
+    <i class="bx bx-plus-circle text-primary"></i> New Ammo Entry
+  </div>
+  <div class="card-body">
+    <form method="post" id="ammoEntryForm" action="{% url 'inventory:ammo_entry' %}">
+      {% csrf_token %}
+
+      <div class="row g-3">
+
+        <!-- Date -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/input.html" with id="id_date" name="date" label="Date *" type="date" value=today|date:"Y-m-d" required=True %}
+        </div>
+
+        <!-- Bullet Type -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/select.html" with id="id_bullet_type" name="bullet_type" label="Bullet Type *" options=bullet_types %}
+        </div>
+
+        <!-- Bullet Status -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/select.html" with id="id_bullet_status" name="bullet_status" label="Bullet Status *" options=bullet_statuses %}
+        </div>
+
+        <!-- Bullet Quantity -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/input.html" with id="id_bullet_quantity" name="bullet_quantity" label="Bullet Quantity *" type="number" min="0" placeholder="0" required=True %}
+        </div>
+
+        <!-- Payment -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/select.html" with id="id_payment" name="payment" label="Payment *" options=payment_methods %}
+        </div>
+
+        <!-- Free Bullet Reason (shown when payment is Free) -->
+        <div class="col-12 col-md-4" id="freeReasonSection">
+          {% include "components/forms/input.html" with id="id_free_bullet_reason" name="free_bullet_reason" label="Free Bullet Reason" type="text" placeholder="Reason for free bullets" %}
+        </div>
+
+      </div>
+
+      <div class="mt-4 d-flex justify-content-end gap-2">
+        <button type="reset" class="btn btn-outline-secondary">
+          <i class="bx bx-reset me-1"></i> Reset
+        </button>
+        <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+          <i class="bx bx-check-circle me-1"></i> Submit Entry
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Today's Entries History -->
+<div class="card history-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-history me-2 text-primary"></i>Today's Ammo Entries</span>
+    <span class="badge bg-label-primary">{{ today_entries|length }} entries</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Bullet Type</th>
+            <th>Status</th>
+            <th class="text-center">Quantity</th>
+            <th>Payment</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in today_entries %}
+          <tr>
+            <td><span class="badge bg-label-primary">{{ entry.get_bullet_type_display }}</span></td>
+            <td><span class="badge bg-label-info">{{ entry.get_bullet_status_display }}</span></td>
+            <td class="text-center fw-bold">{{ entry.bullet_quantity }}</td>
+            <td>
+              {% if entry.payment == 'free' %}
+                <span class="badge bg-label-warning">{{ entry.get_payment_display }}</span>
+              {% else %}
+                <span class="badge bg-label-success">{{ entry.get_payment_display }}</span>
+              {% endif %}
+            </td>
+            <td><small class="text-muted">{{ entry.free_bullet_reason|default:"—" }}</small></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">
+              <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No ammo entries recorded today.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const paymentSelect = document.getElementById('id_payment');
+  const freeReasonSection = document.getElementById('freeReasonSection');
+  const freeReasonInput = document.getElementById('id_free_bullet_reason');
+
+  function toggleFreeReason() {
+    if (paymentSelect.value === 'free') {
+      freeReasonSection.style.display = '';
+      freeReasonInput.required = true;
+    } else {
+      freeReasonSection.style.display = 'none';
+      freeReasonInput.required = false;
+      freeReasonInput.value = '';
+    }
+  }
+
+  paymentSelect.addEventListener('change', toggleFreeReason);
+  toggleFreeReason();
+
+  /* Prevent double-submit */
+  document.getElementById('ammoEntryForm').addEventListener('submit', function () {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+  });
+})();
+</script>
+{% endblock %}
