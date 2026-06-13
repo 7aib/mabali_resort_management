@@ -5,8 +5,8 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from .models import GeneratorLog, InventoryItem, AmbulanceLog, FuelEntry, AmmoEntry
-from .choices import GeneratorCapacityChoices, AssetCategoryChoices, StockStatusChoices, HospitalChoices, PatientTypeChoices, FuelTypeChoices, FuelStatusChoices, VehicleChoices, AmmoCaliberChoices, AmmoStatusChoices, AmmoPaymentChoices
+from .models import GeneratorLog, InventoryItem, AmbulanceLog, FuelTransactionLog, AmmoTransactionLog
+from .choices import AssetCategoryChoices, StockStatusChoices, HospitalChoices, PatientTypeChoices, AmmoCaliberChoices, AmmoPaymentChoices
 
 User = get_user_model()
 
@@ -22,9 +22,8 @@ def inventory_item_create_view(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         category = request.POST.get('category')
-        status = request.POST.get('status', StockStatusChoices.REQUIRED)
-        quantity = request.POST.get('quantity', 0)
-        unit = request.POST.get('unit', 'unit')
+        stock_quantity = request.POST.get('stock_quantity', 0)
+        unit = request.POST.get('unit', '')
         supplier = request.POST.get('supplier', '')
         notes = request.POST.get('notes', '')
         
@@ -35,8 +34,7 @@ def inventory_item_create_view(request):
         InventoryItem.objects.create(
             name=name,
             category=category,
-            status=status,
-            quantity=quantity,
+            stock_quantity=stock_quantity,
             unit=unit,
             supplier=supplier,
             notes=notes
@@ -47,7 +45,6 @@ def inventory_item_create_view(request):
     
     context = {
         'categories': AssetCategoryChoices.choices,
-        'statuses': StockStatusChoices.choices,
     }
     return render(request, 'inventory/item_create.html', context)
 
@@ -74,12 +71,11 @@ def generator_log_view(request):
     
     if request.method == 'POST':
         generator_id = request.POST.get('generator')
-        capacity = request.POST.get('capacity')
         run_hours = request.POST.get('run_hours')
         fuel_used_liters = request.POST.get('fuel_used_liters', 0)
         notes = request.POST.get('notes', '')
         
-        if not generator_id or not capacity or not run_hours:
+        if not generator_id or not run_hours:
             messages.error(request, 'All required fields must be filled.')
             return redirect('inventory:generator_log')
         
@@ -92,7 +88,6 @@ def generator_log_view(request):
         GeneratorLog.objects.create(
             created_by=request.user,
             generator=generator,
-            capacity=capacity,
             run_hours=run_hours,
             fuel_used_liters=fuel_used_liters,
             notes=notes
@@ -108,7 +103,6 @@ def generator_log_view(request):
     
     context = {
         'generators': generators,
-        'generator_types': GeneratorCapacityChoices.choices,
         'today_logs': today_logs,
     }
     return render(request, 'inventory/generator_log.html', context)
@@ -188,41 +182,65 @@ def ambulance_log_view(request):
 def fuel_entry_view(request):
     today = timezone.now().date()
     
+    fuel_items = InventoryItem.objects.filter(
+        category='fuel',
+        is_deleted=False
+    )
+    
+    vehicle_items = InventoryItem.objects.filter(
+        category__in=['jetski', 'boat', 'speedboat', 'parasail', 'vehicle', 'generator', 'ambulance'],
+        is_deleted=False
+    )
+    
     if request.method == 'POST':
         date = request.POST.get('date')
-        fuel_type = request.POST.get('fuel_type')
-        status = request.POST.get('status')
+        transaction_status = request.POST.get('transaction_status')
         quantity = request.POST.get('quantity')
         amount = request.POST.get('amount', 0)
-        issued_to = request.POST.get('issued_to', '')
+        issued_to_id = request.POST.get('issued_to', '')
+        inventory_item_id = request.POST.get('inventory_item', '')
         notes = request.POST.get('notes', '')
         
-        if not date or not fuel_type or not status or not quantity:
+        if not date or not transaction_status or not quantity:
             messages.error(request, 'All required fields must be filled.')
             return redirect('inventory:fuel_entry')
         
-        FuelEntry.objects.create(
+        inventory_item = None
+        if inventory_item_id:
+            try:
+                inventory_item = InventoryItem.objects.get(id=inventory_item_id)
+            except InventoryItem.DoesNotExist:
+                pass
+        
+        issued_to = None
+        if issued_to_id:
+            try:
+                issued_to = InventoryItem.objects.get(id=issued_to_id)
+            except InventoryItem.DoesNotExist:
+                pass
+        
+        FuelTransactionLog.objects.create(
             date=date,
-            fuel_type=fuel_type,
-            status=status,
+            created_by=request.user,
+            inventory_item=inventory_item,
+            transaction_status=transaction_status,
             quantity=quantity,
             amount=amount,
-            issued_to=issued_to if issued_to else None,
+            issued_to=issued_to,
             notes=notes
         )
         
         messages.success(request, 'Fuel entry recorded successfully.')
         return redirect('inventory:fuel_entry')
     
-    # Get today's entries
-    today_entries = FuelEntry.objects.filter(
+    today_entries = FuelTransactionLog.objects.filter(
         date=today
-    ).order_by('-created_at')
+    ).select_related('inventory_item', 'created_by', 'issued_to').order_by('-created_at')
     
     context = {
-        'fuel_types': FuelTypeChoices.choices,
-        'fuel_statuses': FuelStatusChoices.choices,
-        'vehicles': VehicleChoices.choices,
+        'fuel_items': fuel_items,
+        'vehicle_items': vehicle_items,
+        'stock_statuses': StockStatusChoices.choices,
         'today_entries': today_entries,
         'today': today,
     }
@@ -233,22 +251,38 @@ def fuel_entry_view(request):
 def ammo_entry_view(request):
     today = timezone.now().date()
     
+    # Get ammo items from inventory
+    ammo_items = InventoryItem.objects.filter(
+        category='ammo',
+        is_deleted=False
+    )
+    
     if request.method == 'POST':
         date = request.POST.get('date')
         bullet_type = request.POST.get('bullet_type')
-        bullet_status = request.POST.get('bullet_status')
+        transaction_status = request.POST.get('transaction_status')
         bullet_quantity = request.POST.get('bullet_quantity')
         payment = request.POST.get('payment')
         free_bullet_reason = request.POST.get('free_bullet_reason', '')
+        inventory_item_id = request.POST.get('inventory_item', '')
         
-        if not date or not bullet_type or not bullet_status or not bullet_quantity or not payment:
+        if not date or not bullet_type or not transaction_status or not bullet_quantity or not payment:
             messages.error(request, 'All required fields must be filled.')
             return redirect('inventory:ammo_entry')
         
-        AmmoEntry.objects.create(
+        inventory_item = None
+        if inventory_item_id:
+            try:
+                inventory_item = InventoryItem.objects.get(id=inventory_item_id)
+            except InventoryItem.DoesNotExist:
+                pass
+        
+        AmmoTransactionLog.objects.create(
             date=date,
+            created_by=request.user,
+            inventory_item=inventory_item,
             bullet_type=bullet_type,
-            bullet_status=bullet_status,
+            transaction_status=transaction_status,
             bullet_quantity=bullet_quantity,
             payment=payment,
             free_bullet_reason=free_bullet_reason if free_bullet_reason else None
@@ -258,13 +292,14 @@ def ammo_entry_view(request):
         return redirect('inventory:ammo_entry')
     
     # Get today's entries
-    today_entries = AmmoEntry.objects.filter(
+    today_entries = AmmoTransactionLog.objects.filter(
         date=today
-    ).order_by('-created_at')
+    ).select_related('inventory_item', 'created_by').order_by('-created_at')
     
     context = {
+        'ammo_items': ammo_items,
         'bullet_types': AmmoCaliberChoices.choices,
-        'bullet_statuses': AmmoStatusChoices.choices,
+        'stock_statuses': StockStatusChoices.choices,
         'payment_methods': AmmoPaymentChoices.choices,
         'today_entries': today_entries,
         'today': today,

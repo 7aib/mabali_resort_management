@@ -4,62 +4,98 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 from authentication.models import User
-from .choices import AmmoCaliberChoices, AssetCategoryChoices, GeneratorCapacityChoices, HospitalChoices, StockStatusChoices, FuelTypeChoices, PatientTypeChoices, FuelStatusChoices, VehicleChoices, AmmoStatusChoices, AmmoPaymentChoices
+from .choices import AmmoCaliberChoices, AssetCategoryChoices, HospitalChoices, PatientTypeChoices, StockStatusChoices, AmmoPaymentChoices
 from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteModelMixin
 
 
 class InventoryItem(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    """Base inventory item model for tracking assets and supplies."""
+    """Base inventory item model - reference table for assets and supplies."""
 
     name = models.CharField(max_length=120)  # e.g. "Petrol", "9mm Ammo", "100kv Generator"
     category = models.CharField(max_length=20, choices=AssetCategoryChoices.choices)
-    status = models.CharField(max_length=20, choices=StockStatusChoices.choices, default=StockStatusChoices.REQUIRED)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    unit = models.CharField(max_length=30, default='unit')  # e.g. liters, pieces, kms
-    ordered_at = models.DateTimeField(null=True, blank=True)
-    purchased_at = models.DateTimeField(null=True, blank=True)
+    stock_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    unit = models.CharField(max_length=20, blank=True)  # e.g. "liters", "rounds", "units"
     supplier = models.CharField(max_length=150, blank=True)
     notes = models.TextField(blank=True)
 
     class Meta:
-        """Model options."""
         ordering = ['-created_at']
 
     def __str__(self) -> str:
-        """Return string representation of inventory item."""
-        return f"{self.name} - {self.quantity} {self.unit}"
+        return self.name
 
 
 class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    """Log fuel transactions (usage, consumption, transfers)."""
+    """Log fuel transactions (purchases, issuances)."""
 
+    date = models.DateField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_fuel_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='fuel_txns')
-    fuel_type = models.CharField(max_length=10, choices=FuelTypeChoices.choices)
+    transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices)
     quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    unit = models.CharField(max_length=10, default='liters')
-    transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices, default=StockStatusChoices.REQUIRED)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    issued_to = models.ForeignKey(
+        InventoryItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='fuel_received_logs'
+    )
     notes = models.TextField(blank=True)
 
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Fuel Transactions'
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and self.inventory_item:
+            from decimal import Decimal
+            qty = Decimal(str(self.quantity))
+            item = self.inventory_item
+            if self.transaction_status == StockStatusChoices.PURCHASED:
+                item.stock_quantity += qty
+                item.save(update_fields=['stock_quantity'])
+            elif self.transaction_status == StockStatusChoices.ISSUED:
+                item.stock_quantity = max(Decimal('0'), item.stock_quantity - qty)
+                item.save(update_fields=['stock_quantity'])
+
     def __str__(self) -> str:
-        """Return string representation of fuel transaction."""
-        created_by_name = self.created_by.get_full_name() if self.created_by else 'Unknown'
-        return f"{self.fuel_type} {self.quantity} {self.unit} by {created_by_name}"
+        return f"{self.transaction_status} - {self.quantity}L on {self.date}"
 
 
 class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    """Log ammunition transactions (issuance, consumption)."""
+    """Log ammunition transactions (received, fired)."""
 
+    date = models.DateField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_ammo_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ammo_txns')
-    caliber = models.CharField(max_length=10, choices=AmmoCaliberChoices.choices)
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    notes = models.TextField(blank=True)
+    bullet_type = models.CharField(max_length=10, choices=AmmoCaliberChoices.choices)
+    transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices)
+    bullet_quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    payment = models.CharField(max_length=20, choices=AmmoPaymentChoices.choices)
+    free_bullet_reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Ammo Transactions'
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and self.inventory_item:
+            item = self.inventory_item
+            qty = self.bullet_quantity
+            if self.transaction_status == StockStatusChoices.PURCHASED:
+                item.stock_quantity += qty
+                item.save(update_fields=['stock_quantity'])
+            elif self.transaction_status == StockStatusChoices.ISSUED:
+                item.stock_quantity = max(0, item.stock_quantity - qty)
+                item.save(update_fields=['stock_quantity'])
 
     def __str__(self) -> str:
-        """Return string representation of ammo transaction."""
-        created_by_name = self.created_by.get_full_name() if self.created_by else 'Unknown'
-        return f"{self.caliber} x{self.quantity} by {created_by_name}"
+        return f"{self.bullet_type} - {self.transaction_status} - {self.bullet_quantity} rounds on {self.date}"
 
 
 class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
@@ -67,14 +103,12 @@ class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_generator_log')
     generator = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='generator_logs')
-    capacity = models.CharField(max_length=10, choices=GeneratorCapacityChoices.choices)
     run_hours = models.DecimalField(max_digits=8, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     fuel_used_liters = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
 
     def __str__(self) -> str:
-        """Return string representation of generator log."""
-        return f"{self.generator.name} {self.capacity} @ {self.created_at.date()}"
+        return f"{self.generator.name} @ {self.created_at.date()}"
 
 
 class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
@@ -110,40 +144,3 @@ class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     def __str__(self) -> str:
         """Return string representation of ambulance log."""
         return f"{self.patient_name} - {self.hospital} on {self.date}"
-
-
-class FuelEntry(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    """Fuel purchase and issuance log."""
-
-    date = models.DateField(default=timezone.now)
-    fuel_type = models.CharField(max_length=20, choices=FuelTypeChoices.choices)
-    status = models.CharField(max_length=20, choices=FuelStatusChoices.choices)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
-    issued_to = models.CharField(max_length=50, choices=VehicleChoices.choices, blank=True, null=True)
-    notes = models.TextField(blank=True, null=True)
-
-    class Meta:
-        ordering = ['-date', '-created_at']
-        verbose_name_plural = 'Fuel Entries'
-
-    def __str__(self) -> str:
-        return f"{self.fuel_type} - {self.status} - {self.quantity}L on {self.date}"
-
-
-class AmmoEntry(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    """Shooting range ammunition entry log."""
-
-    date = models.DateField(default=timezone.now)
-    bullet_type = models.CharField(max_length=10, choices=AmmoCaliberChoices.choices)
-    bullet_status = models.CharField(max_length=20, choices=AmmoStatusChoices.choices)
-    bullet_quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    payment = models.CharField(max_length=20, choices=AmmoPaymentChoices.choices)
-    free_bullet_reason = models.TextField(blank=True, null=True)
-
-    class Meta:
-        ordering = ['-date', '-created_at']
-        verbose_name_plural = 'Ammo Entries'
-
-    def __str__(self) -> str:
-        return f"{self.bullet_type} - {self.bullet_status} - {self.bullet_quantity} rounds on {self.date}"

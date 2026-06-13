@@ -65,28 +65,23 @@
           {% include "components/forms/select.html" with id="id_category" name="category" label="Category *" options=categories %}
         </div>
 
-        <!-- Status -->
+        <!-- Stock Quantity -->
         <div class="col-12 col-md-4">
-          {% include "components/forms/select.html" with id="id_status" name="status" label="Status" options=statuses %}
-        </div>
-
-        <!-- Quantity -->
-        <div class="col-12 col-md-4">
-          {% include "components/forms/input.html" with id="id_quantity" name="quantity" label="Quantity" type="number" step="0.01" min="0" value="0" %}
+          {% include "components/forms/input.html" with id="id_stock_quantity" name="stock_quantity" label="Stock Quantity" type="number" step="0.01" min="0" value="0" %}
         </div>
 
         <!-- Unit -->
         <div class="col-12 col-md-4">
-          {% include "components/forms/input.html" with id="id_unit" name="unit" label="Unit" type="text" placeholder="e.g. liters, pieces, kms" value="unit" %}
+          {% include "components/forms/input.html" with id="id_unit" name="unit" label="Unit" type="text" placeholder="e.g. liters, rounds, units" %}
         </div>
 
         <!-- Supplier -->
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           {% include "components/forms/input.html" with id="id_supplier" name="supplier" label="Supplier" type="text" placeholder="Supplier name" %}
         </div>
 
         <!-- Notes -->
-        <div class="col-12 col-md-6">
+        <div class="col-12">
           {% include "components/forms/input.html" with id="id_notes" name="notes" label="Notes" type="text" placeholder="Any additional notes" %}
         </div>
 
