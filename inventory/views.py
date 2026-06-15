@@ -55,6 +55,7 @@ def inventory_item_create_view(request):
 
 
 @login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
 def inventory_item_list_view(request):
     items = InventoryItem.objects.filter(is_deleted=False).order_by('-created_at')
     
