@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Purchase Orders — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .list-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .list-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .list-card .card-header { border-bottom-color: #3a3b55; }
+  .list-card + .list-card { margin-top: 28px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-cart me-2"></i> Purchase Orders</h4>
+    <p>Review and process ordered items</p>
+  </div>
+  <div class="text-end d-none d-md-block">
+    <div style="font-size:2rem; opacity:.6;">🛒</div>
+    <small>{{ PROJECT_NAME }}</small>
+  </div>
+</div>
+
+<!-- Fuel Orders -->
+<div class="card list-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-droplet me-2 text-primary"></i>Fuel Orders</span>
+    <span class="badge bg-label-primary">{{ fuel_ordered|length }} pending</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Fuel Item</th>
+            <th class="text-end">Quantity</th>
+            <th class="text-end">Amount</th>
+            <th>Ordered By</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in fuel_ordered %}
+          <tr>
+            <td>{{ entry.date|date:"M d, Y" }}</td>
+            <td class="fw-semibold">{{ entry.inventory_item.name }}</td>
+            <td class="text-end fw-bold">{{ entry.quantity }} L</td>
+            <td class="text-end fw-bold">Rs. {{ entry.amount|floatformat:0 }}</td>
+            <td>{{ entry.created_by.get_full_name|default:entry.created_by.username }}</td>
+            <td class="text-center">
+              <form method="post" class="d-inline" onsubmit="return confirm('Mark as Purchased? Stock will be updated.')">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="fuel">
+                <input type="hidden" name="record_id" value="{{ entry.pk }}">
+                <input type="hidden" name="new_status" value="purchased">
+                <button type="submit" class="btn btn-sm btn-success" title="Mark Purchased">
+                  <i class="bx bx-check-circle me-1"></i> Purchased
+                </button>
+              </form>
+              <form method="post" class="d-inline" onsubmit="return confirm('Cancel this order?')">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="fuel">
+                <input type="hidden" name="record_id" value="{{ entry.pk }}">
+                <input type="hidden" name="new_status" value="cancelled">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel">
+                  <i class="bx bx-x-circle"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="bx bx-check-circle" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No pending fuel orders.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Ammo Orders -->
+<div class="card list-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-crosshair me-2 text-primary"></i>Ammo Orders</span>
+    <span class="badge bg-label-primary">{{ ammo_ordered|length }} pending</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Ammo Item</th>
+            <th class="text-end">Quantity</th>
+            <th>Payment</th>
+            <th>Ordered By</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in ammo_ordered %}
+          <tr>
+            <td>{{ entry.date|date:"M d, Y" }}</td>
+            <td class="fw-semibold">{{ entry.inventory_item.name }}</td>
+            <td class="text-end fw-bold">{{ entry.bullet_quantity }} rounds</td>
+            <td>
+              {% if entry.payment == 'free' %}
+                <span class="badge bg-label-success">Free</span>
+              {% else %}
+                <span class="badge bg-label-info">Paid</span>
+              {% endif %}
+            </td>
+            <td>{{ entry.created_by.get_full_name|default:entry.created_by.username }}</td>
+            <td class="text-center">
+              <form method="post" class="d-inline" onsubmit="return confirm('Mark as Purchased? Stock will be updated.')">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="ammo">
+                <input type="hidden" name="record_id" value="{{ entry.pk }}">
+                <input type="hidden" name="new_status" value="purchased">
+                <button type="submit" class="btn btn-sm btn-success" title="Mark Purchased">
+                  <i class="bx bx-check-circle me-1"></i> Purchased
+                </button>
+              </form>
+              <form method="post" class="d-inline" onsubmit="return confirm('Cancel this order?')">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="ammo">
+                <input type="hidden" name="record_id" value="{{ entry.pk }}">
+                <input type="hidden" name="new_status" value="cancelled">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel">
+                  <i class="bx bx-x-circle"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="bx bx-check-circle" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No pending ammo orders.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

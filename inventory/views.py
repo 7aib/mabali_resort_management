@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from authentication.choices import UserRoles
 from mabali_resort_management.decorators import roles_required
 from .models import GeneratorLog, InventoryItem, AmbulanceLog, FuelTransactionLog, AmmoTransactionLog
-from .choices import AssetCategoryChoices, StockStatusChoices, HospitalChoices, PatientTypeChoices, AmmoCaliberChoices, AmmoPaymentChoices
+from .choices import AssetCategoryChoices, StockStatusChoices, HospitalChoices, PatientTypeChoices, AmmoPaymentChoices
 
 User = get_user_model()
 
@@ -215,6 +215,11 @@ def fuel_entry_view(request):
         is_deleted=False
     )
     
+    entry_statuses = [
+        (StockStatusChoices.REQUIRED, StockStatusChoices.REQUIRED.label),
+        (StockStatusChoices.ISSUED, StockStatusChoices.ISSUED.label),
+    ]
+
     if request.method == 'POST':
         date = request.POST.get('date')
         transaction_status = request.POST.get('transaction_status')
@@ -223,9 +228,13 @@ def fuel_entry_view(request):
         issued_to_id = request.POST.get('issued_to', '')
         inventory_item_id = request.POST.get('inventory_item', '')
         notes = request.POST.get('notes', '')
-        
+
         if not date or not transaction_status or not quantity:
             messages.error(request, 'All required fields must be filled.')
+            return redirect('inventory:fuel_entry')
+
+        if transaction_status not in [StockStatusChoices.REQUIRED, StockStatusChoices.ISSUED]:
+            messages.error(request, 'Invalid transaction status.')
             return redirect('inventory:fuel_entry')
         
         inventory_item = None
@@ -263,7 +272,7 @@ def fuel_entry_view(request):
     context = {
         'fuel_items': fuel_items,
         'vehicle_items': vehicle_items,
-        'stock_statuses': StockStatusChoices.choices,
+        'stock_statuses': entry_statuses,
         'today_entries': today_entries,
         'today': today,
     }
@@ -273,58 +282,112 @@ def fuel_entry_view(request):
 @login_required
 def ammo_entry_view(request):
     today = timezone.now().date()
-    
-    # Get ammo items from inventory
+
     ammo_items = InventoryItem.objects.filter(
         category='ammo',
         is_deleted=False
     )
-    
+
+    entry_statuses = [
+        (StockStatusChoices.REQUIRED, StockStatusChoices.REQUIRED.label),
+        (StockStatusChoices.ISSUED, StockStatusChoices.ISSUED.label),
+    ]
+
     if request.method == 'POST':
         date = request.POST.get('date')
-        bullet_type = request.POST.get('bullet_type')
         transaction_status = request.POST.get('transaction_status')
         bullet_quantity = request.POST.get('bullet_quantity')
-        payment = request.POST.get('payment')
+        payment = request.POST.get('payment', '')
         free_bullet_reason = request.POST.get('free_bullet_reason', '')
         inventory_item_id = request.POST.get('inventory_item', '')
-        
-        if not date or not bullet_type or not transaction_status or not bullet_quantity or not payment:
+
+        if not date or not transaction_status or not bullet_quantity:
             messages.error(request, 'All required fields must be filled.')
             return redirect('inventory:ammo_entry')
-        
+
+        if transaction_status not in [StockStatusChoices.REQUIRED, StockStatusChoices.ISSUED]:
+            messages.error(request, 'Invalid transaction status.')
+            return redirect('inventory:ammo_entry')
+
+        if transaction_status == StockStatusChoices.ISSUED and not payment:
+            messages.error(request, 'Payment method is required for issued transactions.')
+            return redirect('inventory:ammo_entry')
+
         inventory_item = None
         if inventory_item_id:
             try:
                 inventory_item = InventoryItem.objects.get(id=inventory_item_id)
             except InventoryItem.DoesNotExist:
                 pass
-        
+
         AmmoTransactionLog.objects.create(
             date=date,
             created_by=request.user,
             inventory_item=inventory_item,
-            bullet_type=bullet_type,
             transaction_status=transaction_status,
             bullet_quantity=bullet_quantity,
-            payment=payment,
+            payment=payment if transaction_status == StockStatusChoices.ISSUED else '',
             free_bullet_reason=free_bullet_reason if free_bullet_reason else None
         )
-        
+
         messages.success(request, 'Ammo entry recorded successfully.')
         return redirect('inventory:ammo_entry')
-    
-    # Get today's entries
+
     today_entries = AmmoTransactionLog.objects.filter(
         date=today
     ).select_related('inventory_item', 'created_by').order_by('-created_at')
-    
+
     context = {
         'ammo_items': ammo_items,
-        'bullet_types': AmmoCaliberChoices.choices,
-        'stock_statuses': StockStatusChoices.choices,
+        'stock_statuses': entry_statuses,
         'payment_methods': AmmoPaymentChoices.choices,
         'today_entries': today_entries,
         'today': today,
     }
     return render(request, 'inventory/ammo_entry.html', context)
+
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+def purchase_orders_view(request):
+    fuel_ordered = FuelTransactionLog.objects.filter(
+        transaction_status=StockStatusChoices.ORDERED
+    ).select_related('inventory_item', 'created_by').order_by('-date')
+
+    ammo_ordered = AmmoTransactionLog.objects.filter(
+        transaction_status=StockStatusChoices.ORDERED
+    ).select_related('inventory_item', 'created_by').order_by('-date')
+
+    if request.method == 'POST':
+        model_type = request.POST.get('model')
+        record_id = request.POST.get('record_id')
+        new_status = request.POST.get('new_status')
+
+        if new_status not in [StockStatusChoices.PURCHASED, StockStatusChoices.CANCELLED]:
+            messages.error(request, 'Invalid status.')
+            return redirect('inventory:purchase_orders')
+
+        if model_type == 'fuel':
+            try:
+                record = FuelTransactionLog.objects.get(pk=record_id)
+                record.transaction_status = new_status
+                record.save()
+                messages.success(request, f'Fuel transaction updated to {record.get_transaction_status_display()}.')
+            except FuelTransactionLog.DoesNotExist:
+                messages.error(request, 'Transaction not found.')
+        elif model_type == 'ammo':
+            try:
+                record = AmmoTransactionLog.objects.get(pk=record_id)
+                record.transaction_status = new_status
+                record.save()
+                messages.success(request, f'Ammo transaction updated to {record.get_transaction_status_display()}.')
+            except AmmoTransactionLog.DoesNotExist:
+                messages.error(request, 'Transaction not found.')
+
+        return redirect('inventory:purchase_orders')
+
+    context = {
+        'fuel_ordered': fuel_ordered,
+        'ammo_ordered': ammo_ordered,
+    }
+    return render(request, 'inventory/purchase_orders.html', context)

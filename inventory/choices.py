@@ -16,31 +16,13 @@ class AssetCategoryChoices(models.TextChoices):
     OTHER = 'other', 'Other'
 
 
-class AmmoCaliberChoices(models.TextChoices):
-    """Ammunition caliber options."""
-    NINE_MM = '9mm', '9mm'
-    FORTY_FIVE = '.45', '.45'
-    TWENTY_TWO = '.22', '.22'
-    THIRTY_EIGHT = '.38', '.38'
-
-
 class StockStatusChoices(models.TextChoices):
     """Inventory stock status options."""
     ORDERED = 'ordered', 'Ordered'
-    PENDING = 'pending', 'Pending'
     REQUIRED = 'required', 'Required'
     PURCHASED = 'purchased', 'Purchased'
+    CANCELLED = 'cancelled', 'Cancelled'
     ISSUED = 'issued', 'Issued'
-    IN_STOCK = 'in_stock', 'In Stock'
-    LOW_STOCK = 'low_stock', 'Low Stock'
-    OUT_OF_STOCK = 'out_of_stock', 'Out of Stock'
-
-
-class FuelTypeChoices(models.TextChoices):
-    """Fuel type options."""
-    PETROL = 'petrol', 'Petrol'
-    DIESEL = 'diesel', 'Diesel'
-    ENGINE_OIL = 'engine_oil', 'Engine Oil'
 
 
 class HospitalChoices(models.TextChoices):
@@ -63,6 +45,7 @@ class PatientTypeChoices(models.TextChoices):
 
 class AmmoPaymentChoices(models.TextChoices):
     """Ammunition payment options."""
+    PAID_VIA_CASH = 'paid_via_cash', 'Paid via Cash'
     PAID_VIA_TICKETS = 'paid_via_tickets', 'Paid via Tickets'
     PAID_VIA_GROUPS = 'paid_via_groups', 'Paid via Groups'
     FREE = 'free', 'Free Bullets'

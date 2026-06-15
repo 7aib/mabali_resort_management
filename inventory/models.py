@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 from authentication.models import User
-from .choices import AmmoCaliberChoices, AssetCategoryChoices, HospitalChoices, PatientTypeChoices, StockStatusChoices, AmmoPaymentChoices
+from .choices import AssetCategoryChoices, HospitalChoices, PatientTypeChoices, StockStatusChoices, AmmoPaymentChoices
 from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteModelMixin
 
 
@@ -48,10 +48,15 @@ class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
         verbose_name_plural = 'Fuel Transactions'
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
+        from decimal import Decimal
+        old_status = None
+        if self.pk:
+            try:
+                old_status = FuelTransactionLog.objects.get(pk=self.pk).transaction_status
+            except FuelTransactionLog.DoesNotExist:
+                pass
         super().save(*args, **kwargs)
-        if is_new and self.inventory_item:
-            from decimal import Decimal
+        if self.inventory_item and old_status != self.transaction_status:
             qty = Decimal(str(self.quantity))
             item = self.inventory_item
             if self.transaction_status == StockStatusChoices.PURCHASED:
@@ -71,10 +76,9 @@ class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
     date = models.DateField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_ammo_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ammo_txns')
-    bullet_type = models.CharField(max_length=10, choices=AmmoCaliberChoices.choices)
     transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices)
     bullet_quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    payment = models.CharField(max_length=20, choices=AmmoPaymentChoices.choices)
+    payment = models.CharField(max_length=20, choices=AmmoPaymentChoices.choices, blank=True)
     free_bullet_reason = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -82,9 +86,14 @@ class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
         verbose_name_plural = 'Ammo Transactions'
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
+        old_status = None
+        if self.pk:
+            try:
+                old_status = AmmoTransactionLog.objects.get(pk=self.pk).transaction_status
+            except AmmoTransactionLog.DoesNotExist:
+                pass
         super().save(*args, **kwargs)
-        if is_new and self.inventory_item:
+        if self.inventory_item and old_status != self.transaction_status:
             item = self.inventory_item
             qty = self.bullet_quantity
             if self.transaction_status == StockStatusChoices.PURCHASED:
@@ -95,7 +104,7 @@ class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
                 item.save(update_fields=['stock_quantity'])
 
     def __str__(self) -> str:
-        return f"{self.bullet_type} - {self.transaction_status} - {self.bullet_quantity} rounds on {self.date}"
+        return f"{self.transaction_status} - {self.bullet_quantity} rounds on {self.date}"
 
 
 class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
