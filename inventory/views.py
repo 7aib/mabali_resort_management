@@ -5,6 +5,9 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+
+from authentication.choices import UserRoles
+from mabali_resort_management.decorators import roles_required
 from .models import GeneratorLog, InventoryItem, AmbulanceLog, FuelTransactionLog, AmmoTransactionLog
 from .choices import AssetCategoryChoices, StockStatusChoices, HospitalChoices, PatientTypeChoices, AmmoCaliberChoices, AmmoPaymentChoices
 
@@ -18,6 +21,7 @@ def inventory_dashboard(request: HttpResponse) -> HttpResponse:
 
 
 @login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
 def inventory_item_create_view(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -57,6 +61,25 @@ def inventory_item_list_view(request):
         'items': items,
     }
     return render(request, 'inventory/item_list.html', context)
+
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+def inventory_item_delete_view(request, pk):
+    try:
+        item = InventoryItem.objects.get(pk=pk, is_deleted=False)
+    except InventoryItem.DoesNotExist:
+        messages.error(request, 'Item not found.')
+        return redirect('inventory:item_list')
+    
+    if request.method == 'POST':
+        item.is_deleted = True
+        item.deleted_at = timezone.now()
+        item.save(update_fields=['is_deleted', 'deleted_at'])
+        messages.success(request, f'"{item.name}" deleted successfully.')
+        return redirect('inventory:item_list')
+    
+    return redirect('inventory:item_list')
 
 
 @login_required

@@ -60,6 +60,7 @@
             <th>Unit</th>
             <th>Supplier</th>
             <th>Created</th>
+            <th class="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -71,10 +72,18 @@
             <td>{{ item.unit|default:"—" }}</td>
             <td>{{ item.supplier|default:"—" }}</td>
             <td><small class="text-muted">{{ item.created_at|date:"M d, Y" }}</small></td>
+            <td class="text-center">
+              <form method="post" action="{% url 'inventory:item_delete' item.pk %}" class="d-inline" onsubmit="return confirm('Delete {{ item.name }}?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                  <i class="bx bx-trash"></i>
+                </button>
+              </form>
+            </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="6" class="text-center text-muted py-4">
+            <td colspan="7" class="text-center text-muted py-4">
               <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
               <p class="mb-0 mt-1">No inventory items found.</p>
             </td>

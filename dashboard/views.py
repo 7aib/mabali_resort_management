@@ -4,7 +4,7 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.db.models import Sum, Count
+from django.db.models import Sum
 
 from authentication.choices import UserRoles
 from cash_counters.models import EntryCounterForm, EntryTransaction

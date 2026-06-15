@@ -154,6 +154,7 @@
           <div data-i18n="Inventory">Inventory</div>
         </a>
         <ul class="menu-sub">
+          {% if user.role == 'CEO' or user.role == 'ACCOUNTANT' or user.role == 'HR_MANAGER' %}
           <li class="menu-item {% if request.resolver_match.url_name == 'item_list' %}active{% endif %}">
             <a href="{% url 'inventory:item_list' %}" class="menu-link">
               <div data-i18n="Items">Items</div>
@@ -164,6 +165,7 @@
               <div data-i18n="Add Item">Add Item</div>
             </a>
           </li>
+          {% endif %}
           <li class="menu-item {% if request.resolver_match.url_name == 'fuel_entry' %}active{% endif %}">
             <a href="{% url 'inventory:fuel_entry' %}" class="menu-link">
               <div data-i18n="Fuel Entry">Fuel Entry</div>
