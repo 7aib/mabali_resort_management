@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
 from authentication.choices import UserRoles
 from mabali_resort_management.decorators import roles_required
@@ -251,19 +252,22 @@ def fuel_entry_view(request):
             except InventoryItem.DoesNotExist:
                 pass
         
-        FuelTransactionLog.objects.create(
-            date=date,
-            created_by=request.user,
-            inventory_item=inventory_item,
-            transaction_status=transaction_status,
-            quantity=quantity,
-            amount=amount,
-            issued_to=issued_to,
-            notes=notes
-        )
-        
-        messages.success(request, 'Fuel entry recorded successfully.')
-        return redirect('inventory:fuel_entry')
+        try:
+            FuelTransactionLog.objects.create(
+                date=date,
+                created_by=request.user,
+                inventory_item=inventory_item,
+                transaction_status=transaction_status,
+                quantity=quantity,
+                amount=amount,
+                issued_to=issued_to,
+                notes=notes
+            )
+            messages.success(request, 'Fuel entry recorded successfully.')
+            return redirect('inventory:fuel_entry')
+        except ValidationError as e:
+            messages.error(request, str(e.message))
+            return redirect('inventory:fuel_entry')
     
     today_entries = FuelTransactionLog.objects.filter(
         date=today
@@ -320,18 +324,21 @@ def ammo_entry_view(request):
             except InventoryItem.DoesNotExist:
                 pass
 
-        AmmoTransactionLog.objects.create(
-            date=date,
-            created_by=request.user,
-            inventory_item=inventory_item,
-            transaction_status=transaction_status,
-            bullet_quantity=bullet_quantity,
-            payment=payment if transaction_status == StockStatusChoices.ISSUED else '',
-            free_bullet_reason=free_bullet_reason if free_bullet_reason else None
-        )
-
-        messages.success(request, 'Ammo entry recorded successfully.')
-        return redirect('inventory:ammo_entry')
+        try:
+            AmmoTransactionLog.objects.create(
+                date=date,
+                created_by=request.user,
+                inventory_item=inventory_item,
+                transaction_status=transaction_status,
+                bullet_quantity=bullet_quantity,
+                payment=payment if transaction_status == StockStatusChoices.ISSUED else '',
+                free_bullet_reason=free_bullet_reason if free_bullet_reason else None
+            )
+            messages.success(request, 'Ammo entry recorded successfully.')
+            return redirect('inventory:ammo_entry')
+        except ValidationError as e:
+            messages.error(request, str(e.message))
+            return redirect('inventory:ammo_entry')
 
     today_entries = AmmoTransactionLog.objects.filter(
         date=today
@@ -358,36 +365,48 @@ def purchase_orders_view(request):
         transaction_status=StockStatusChoices.ORDERED
     ).select_related('inventory_item', 'created_by').order_by('-date')
 
+    fuel_required = FuelTransactionLog.objects.filter(
+        transaction_status=StockStatusChoices.REQUIRED
+    ).select_related('inventory_item', 'created_by').order_by('-date')
+
+    ammo_required = AmmoTransactionLog.objects.filter(
+        transaction_status=StockStatusChoices.REQUIRED
+    ).select_related('inventory_item', 'created_by').order_by('-date')
+
     if request.method == 'POST':
         model_type = request.POST.get('model')
         record_id = request.POST.get('record_id')
         new_status = request.POST.get('new_status')
-
-        if new_status not in [StockStatusChoices.PURCHASED, StockStatusChoices.CANCELLED]:
-            messages.error(request, 'Invalid status.')
-            return redirect('inventory:purchase_orders')
 
         if model_type == 'fuel':
             try:
                 record = FuelTransactionLog.objects.get(pk=record_id)
                 record.transaction_status = new_status
                 record.save()
-                messages.success(request, f'Fuel transaction updated to {record.get_transaction_status_display()}.')
+                messages.success(request, 'Fuel transaction updated to %s.' % record.get_transaction_status_display())
             except FuelTransactionLog.DoesNotExist:
                 messages.error(request, 'Transaction not found.')
+            except ValidationError as e:
+                messages.error(request, str(e.message))
         elif model_type == 'ammo':
             try:
                 record = AmmoTransactionLog.objects.get(pk=record_id)
                 record.transaction_status = new_status
                 record.save()
-                messages.success(request, f'Ammo transaction updated to {record.get_transaction_status_display()}.')
+                messages.success(request, 'Ammo transaction updated to %s.' % record.get_transaction_status_display())
             except AmmoTransactionLog.DoesNotExist:
                 messages.error(request, 'Transaction not found.')
+            except ValidationError as e:
+                messages.error(request, str(e.message))
 
         return redirect('inventory:purchase_orders')
 
     context = {
         'fuel_ordered': fuel_ordered,
         'ammo_ordered': ammo_ordered,
+        'fuel_required': fuel_required,
+        'ammo_required': ammo_required,
+        'required_count': fuel_required.count() + ammo_required.count(),
+        'ordered_count': fuel_ordered.count() + ammo_ordered.count(),
     }
     return render(request, 'inventory/purchase_orders.html', context)

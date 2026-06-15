@@ -1,10 +1,12 @@
 """Inventory management models."""
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from authentication.models import User
 from .choices import AssetCategoryChoices, HospitalChoices, PatientTypeChoices, StockStatusChoices, AmmoPaymentChoices
+from .utils import validate_status_transition
 from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteModelMixin
 
 
@@ -55,7 +57,21 @@ class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
                 old_status = FuelTransactionLog.objects.get(pk=self.pk).transaction_status
             except FuelTransactionLog.DoesNotExist:
                 pass
+        else:
+            self._validate_creation_status()
+
+        if old_status and old_status != self.transaction_status:
+            validate_status_transition(old_status, self.transaction_status)
+
+        if self.transaction_status == StockStatusChoices.ISSUED and self.inventory_item:
+            qty = Decimal(str(self.quantity))
+            if self.inventory_item.stock_quantity < qty:
+                raise ValidationError(
+                    'Insufficient stock. Available: %s, Requested: %s' % (self.inventory_item.stock_quantity, qty)
+                )
+
         super().save(*args, **kwargs)
+
         if self.inventory_item and old_status != self.transaction_status:
             qty = Decimal(str(self.quantity))
             item = self.inventory_item
@@ -63,8 +79,15 @@ class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
                 item.stock_quantity += qty
                 item.save(update_fields=['stock_quantity'])
             elif self.transaction_status == StockStatusChoices.ISSUED:
-                item.stock_quantity = max(Decimal('0'), item.stock_quantity - qty)
+                item.stock_quantity -= qty
                 item.save(update_fields=['stock_quantity'])
+
+    def _validate_creation_status(self):
+        from .utils import get_creation_statuses
+        if self.transaction_status not in get_creation_statuses():
+            raise ValidationError(
+                'Initial status must be one of: %s' % ', '.join(s.label for s in get_creation_statuses())
+            )
 
     def __str__(self) -> str:
         return f"{self.transaction_status} - {self.quantity}L on {self.date}"
@@ -92,16 +115,38 @@ class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
                 old_status = AmmoTransactionLog.objects.get(pk=self.pk).transaction_status
             except AmmoTransactionLog.DoesNotExist:
                 pass
+        else:
+            self._validate_creation_status()
+
+        if old_status and old_status != self.transaction_status:
+            validate_status_transition(old_status, self.transaction_status)
+
+        if self.transaction_status == StockStatusChoices.ISSUED and self.inventory_item:
+            qty = int(self.bullet_quantity)
+            if self.inventory_item.stock_quantity < qty:
+                raise ValidationError(
+                    'Insufficient stock. Available: %s, Requested: %s' % (self.inventory_item.stock_quantity, qty)
+                )
+
         super().save(*args, **kwargs)
+
         if self.inventory_item and old_status != self.transaction_status:
+            from decimal import Decimal
             item = self.inventory_item
-            qty = self.bullet_quantity
+            qty = int(self.bullet_quantity)
             if self.transaction_status == StockStatusChoices.PURCHASED:
                 item.stock_quantity += qty
                 item.save(update_fields=['stock_quantity'])
             elif self.transaction_status == StockStatusChoices.ISSUED:
-                item.stock_quantity = max(0, item.stock_quantity - qty)
+                item.stock_quantity -= qty
                 item.save(update_fields=['stock_quantity'])
+
+    def _validate_creation_status(self):
+        from .utils import get_creation_statuses
+        if self.transaction_status not in get_creation_statuses():
+            raise ValidationError(
+                'Initial status must be one of: %s' % ', '.join(s.label for s in get_creation_statuses())
+            )
 
     def __str__(self) -> str:
         return f"{self.transaction_status} - {self.bullet_quantity} rounds on {self.date}"
