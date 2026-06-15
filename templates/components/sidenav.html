@@ -186,8 +186,8 @@
               <div data-i18n="Ambulance Log">Ambulance Log</div>
             </a>
           </li>
-          <li class="menu-item">
-            <a href="javascript:void(0);" class="menu-link" data-bs-toggle="tooltip" data-bs-placement="right" title="Coming soon">
+          <li class="menu-item {% if request.resolver_match.url_name == 'stock_management' %}active{% endif %}">
+            <a href="{% url 'inventory:stock_management' %}" class="menu-link">
               <div data-i18n="Stock Management">Stock Management</div>
             </a>
           </li>

@@ -410,3 +410,40 @@ def purchase_orders_view(request):
         'ordered_count': fuel_ordered.count() + ammo_ordered.count(),
     }
     return render(request, 'inventory/purchase_orders.html', context)
+
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+def stock_management_view(request):
+    fuel_items = InventoryItem.objects.filter(category='fuel', is_deleted=False).order_by('name')
+    ammo_items = InventoryItem.objects.filter(category='ammo', is_deleted=False).order_by('name')
+    generator_items = InventoryItem.objects.filter(category='generator', is_deleted=False).order_by('name')
+    ambulance_items = InventoryItem.objects.filter(category='ambulance', is_deleted=False).order_by('name')
+
+    fuel_transactions = FuelTransactionLog.objects.select_related(
+        'inventory_item', 'created_by', 'issued_to'
+    ).order_by('-date')[:50]
+
+    ammo_transactions = AmmoTransactionLog.objects.select_related(
+        'inventory_item', 'created_by'
+    ).order_by('-date')[:50]
+
+    generator_logs = GeneratorLog.objects.select_related(
+        'generator', 'created_by'
+    ).order_by('-created_at')[:50]
+
+    ambulance_logs = AmbulanceLog.objects.select_related(
+        'ambulance', 'driver'
+    ).order_by('-date')[:50]
+
+    context = {
+        'fuel_items': fuel_items,
+        'ammo_items': ammo_items,
+        'generator_items': generator_items,
+        'ambulance_items': ambulance_items,
+        'fuel_transactions': fuel_transactions,
+        'ammo_transactions': ammo_transactions,
+        'generator_logs': generator_logs,
+        'ambulance_logs': ambulance_logs,
+    }
+    return render(request, 'inventory/stock_management.html', context)
