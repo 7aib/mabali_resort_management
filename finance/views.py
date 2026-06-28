@@ -4,9 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import POS
 from .constants import POSPaymentMethodChoices, CounterTypeChoices
+from error_logs.decorators import log_errors
 
 
 @login_required
+@log_errors
 def pos_entry_view(request):
     today = timezone.now().date()
     

@@ -9,6 +9,7 @@ import re
 from authentication.models import User
 from authentication.choices import UserRoles
 from mabali_resort_management.decorators import roles_required
+from error_logs.decorators import log_errors
 
 from .forms import LoginForm
 
@@ -57,6 +58,7 @@ def _check_phone_number_exists(phone_number: str, exclude_user_id: int = None) -
     return query.exists()
 
 
+@log_errors
 def login_view(request: HttpResponse) -> HttpResponse:
     """Handle user login with form validation and authentication."""
     if request.method == "POST":
@@ -76,6 +78,7 @@ def login_view(request: HttpResponse) -> HttpResponse:
     return render(request, "login.html", {"form": form})
 
 
+@log_errors
 def logout_view(request: HttpResponse) -> HttpResponse:
     """Log out the current user and redirect to login page."""
     logout(request)
@@ -83,6 +86,7 @@ def logout_view(request: HttpResponse) -> HttpResponse:
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def employee_dashboard(request: HttpResponse) -> HttpResponse:
     """Display a list of employees excluding CEO users."""
     employees = User.objects.exclude(role=UserRoles.CEO)
@@ -90,6 +94,7 @@ def employee_dashboard(request: HttpResponse) -> HttpResponse:
 
 
 @login_required
+@log_errors
 def profile_view(request: HttpResponse) -> HttpResponse:
     """Display the current user's profile."""
     return render(request, "profile.html")
@@ -101,6 +106,7 @@ from django.shortcuts import render, redirect
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.HR_MANAGER)
+@log_errors
 def employee_create(request):
     """Create a new employee."""
 
@@ -174,6 +180,7 @@ def employee_create(request):
     )
 
 @login_required
+@log_errors
 def employee_detail(request: HttpResponse, pk: int) -> HttpResponse:
     """Display details for a specific employee."""
     employee = get_object_or_404(User, pk=pk)
@@ -182,6 +189,7 @@ def employee_detail(request: HttpResponse, pk: int) -> HttpResponse:
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
     """Edit a specific employee's details. Only CEO and HR Manager can edit."""
     employee = get_object_or_404(User, pk=pk)
@@ -222,6 +230,7 @@ def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def employee_delete(request: HttpResponse, pk: int) -> HttpResponse:
     """Delete a specific employee. Only CEO and HR Manager can delete."""
     employee = get_object_or_404(User, pk=pk)

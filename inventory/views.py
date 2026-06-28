@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 
 from authentication.choices import UserRoles
 from mabali_resort_management.decorators import roles_required
+from error_logs.decorators import log_errors
 from .models import GeneratorLog, InventoryItem, AmbulanceLog, FuelTransactionLog, AmmoTransactionLog
 from .choices import AssetCategoryChoices, StockStatusChoices, HospitalChoices, PatientTypeChoices, AmmoPaymentChoices
 
@@ -16,6 +17,7 @@ User = get_user_model()
 
 
 @login_required
+@log_errors
 def inventory_dashboard(request: HttpRequest) -> HttpResponse:
     """Display the inventory dashboard."""
     return redirect('inventory:stock_management')
@@ -23,6 +25,7 @@ def inventory_dashboard(request: HttpRequest) -> HttpResponse:
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def inventory_item_create_view(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -56,6 +59,7 @@ def inventory_item_create_view(request):
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def inventory_item_list_view(request):
     items = InventoryItem.objects.filter(is_deleted=False).order_by('-created_at')
     
@@ -67,6 +71,7 @@ def inventory_item_list_view(request):
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def inventory_item_delete_view(request, pk):
     try:
         item = InventoryItem.objects.get(pk=pk, is_deleted=False)
@@ -85,6 +90,7 @@ def inventory_item_delete_view(request, pk):
 
 
 @login_required
+@log_errors
 def generator_log_view(request):
     today = timezone.now().date()
     
@@ -134,6 +140,7 @@ def generator_log_view(request):
 
 
 @login_required
+@log_errors
 def ambulance_log_view(request):
     today = timezone.now().date()
     
@@ -204,6 +211,7 @@ def ambulance_log_view(request):
 
 
 @login_required
+@log_errors
 def fuel_entry_view(request):
     today = timezone.now().date()
     
@@ -285,6 +293,7 @@ def fuel_entry_view(request):
 
 
 @login_required
+@log_errors
 def ammo_entry_view(request):
     today = timezone.now().date()
 
@@ -357,6 +366,7 @@ def ammo_entry_view(request):
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def purchase_orders_view(request):
     fuel_ordered = FuelTransactionLog.objects.filter(
         transaction_status=StockStatusChoices.ORDERED
@@ -417,6 +427,7 @@ def purchase_orders_view(request):
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
 def stock_management_view(request):
     fuel_items = InventoryItem.objects.filter(category='fuel', is_deleted=False).order_by('name')
     ammo_items = InventoryItem.objects.filter(category='ammo', is_deleted=False).order_by('name')

@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from authentication.choices import UserRoles
 from mabali_resort_management.decorators import roles_required
+from error_logs.decorators import log_errors
 from .models import Room, Reservation
 from .choices import (
     PaymentMethodChoices, PaymentTypeChoices, ReservationStatusChoices, BankChoices,
@@ -45,6 +46,7 @@ def _get_or_create_customer(phone: str, name: str):
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.CASHIER, UserRoles.HR_MANAGER)
+@log_errors
 def reservation_create_view(request: HttpRequest) -> HttpResponse:
     rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by('name')
 
@@ -120,6 +122,7 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
 
 @login_required
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.CASHIER, UserRoles.HR_MANAGER)
+@log_errors
 def reservation_list_view(request: HttpRequest) -> HttpResponse:
     reservations = Reservation.objects.select_related(
         'customer', 'room', 'created_by'
@@ -133,6 +136,7 @@ def reservation_list_view(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
+@log_errors
 def customer_lookup_api(request: HttpRequest) -> HttpResponse:
     """AJAX endpoint — return customer data by phone number."""
     from django.http import JsonResponse
@@ -152,6 +156,7 @@ def customer_lookup_api(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
+@log_errors
 def room_status_view(request: HttpRequest) -> HttpResponse:
     """Show live status of every room."""
     today = timezone.now().date()

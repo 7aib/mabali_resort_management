@@ -9,10 +9,12 @@ from authentication.choices import UserRoles
 from .models import EntryCounterForm, EntryTransaction, CashHandover, CashRegister
 from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices, CounterTypeChoices
 from mabali_resort_management.constants import PAID_VISIT_PRICE
+from error_logs.decorators import log_errors
 
 User = get_user_model()
 
 @login_required
+@log_errors
 def daily_sales_view(request):
     today = timezone.now().date()
 
@@ -30,6 +32,7 @@ def daily_sales_view(request):
 
 
 @login_required
+@log_errors
 def entry_form_view(request):
     if request.method == 'POST':
         phone_number = request.POST.get('phone_number')
@@ -90,6 +93,7 @@ def entry_form_view(request):
     return render(request, 'cash_counters/entry_form.html', context)
 
 @login_required
+@log_errors
 def check_customer_status(request):
     phone_number = request.GET.get('phone_number', '')
     if not phone_number:
@@ -105,6 +109,7 @@ def check_customer_status(request):
 
 
 @login_required
+@log_errors
 def cash_handover_view(request):
     today = timezone.now().date()
     
@@ -166,6 +171,7 @@ def cash_handover_view(request):
 
 
 @login_required
+@log_errors
 def cash_register_view(request):
     today = timezone.now().date()
     

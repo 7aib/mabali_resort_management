@@ -8,9 +8,11 @@ from django.db.models import Sum
 
 from authentication.choices import UserRoles
 from cash_counters.models import EntryCounterForm, EntryTransaction
+from error_logs.decorators import log_errors
 
 
 @login_required
+@log_errors
 def dashboard_view(request: HttpResponse) -> HttpResponse:
     """Display the main dashboard with financial and operational metrics."""
     today = date.today()
