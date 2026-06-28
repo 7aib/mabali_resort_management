@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}New Reservation — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .form-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .form-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .form-card .card-header { border-bottom-color: #3a3b55; }
+
+  .submit-btn { min-width: 160px; font-weight: 700; }
+
+  .section-title {
+    font-size: .85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #696cff;
+    margin: 20px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #f0f0f6;
+  }
+  .dark-style .section-title { border-bottom-color: #3a3b55; }
+
+  .customer-found {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: .85rem;
+    color: #2e7d32;
+    margin-top: 6px;
+    display: none;
+  }
+  .customer-found.show { display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-bed me-2"></i> New Reservation</h4>
+    <p>Create a room or hut booking for a guest</p>
+  </div>
+  <div class="text-end d-none d-md-block">
+    <div style="font-size:2rem; opacity:.6;">🏨</div>
+    <small>{{ PROJECT_NAME }}</small>
+  </div>
+</div>
+
+<!-- Reservation Form -->
+<div class="card form-card">
+  <div class="card-header d-flex align-items-center gap-2">
+    <i class="bx bx-plus-circle text-primary"></i> Reservation Details
+  </div>
+  <div class="card-body">
+    <form method="post" id="reservationForm" action="{% url 'reservations:reservation_create' %}">
+      {% csrf_token %}
+
+      <!-- Guest Info -->
+      <div class="section-title"><i class="bx bx-user me-1"></i> Guest Information</div>
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="id_phone_number">Phone Number *</label>
+          <input type="tel" class="form-control" id="id_phone_number" name="phone_number"
+                 value="+92" placeholder="+9230112345678" pattern="^\+92[0-9]{10}$"
+                 minlength="13" maxlength="13" required>
+          <div class="customer-found" id="customerFound">
+            <i class="bx bx-check-circle me-1"></i> Returning guest — <strong id="customerName"></strong>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="id_guest_name">Guest Name *</label>
+          <input type="text" class="form-control" id="id_guest_name" name="guest_name"
+                 placeholder="Full name" required>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label" for="id_no_of_adults">Adults *</label>
+          <input type="number" class="form-control" id="id_no_of_adults" name="no_of_adults"
+                 min="1" value="1" required>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label" for="id_no_of_kids">Kids</label>
+          <input type="number" class="form-control" id="id_no_of_kids" name="no_of_kids"
+                 min="0" value="0">
+        </div>
+      </div>
+
+      <!-- Room & Dates -->
+      <div class="section-title"><i class="bx bx-building me-1"></i> Room & Stay Details</div>
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="id_room">Room / Hut *</label>
+          <select class="form-select" id="id_room" name="room" required>
+            <option value="">Select Room / Hut</option>
+            {% for room in rooms %}
+            <option value="{{ room.id }}" data-rate="{{ room.rate_per_night }}">
+              {{ room.name }} ({{ room.get_category_display }}) — Rs. {{ room.rate_per_night }}/night
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_check_in_date">Check-In Date *</label>
+          <input type="date" class="form-control" id="id_check_in_date" name="check_in_date"
+                 value="{{ today|date:'Y-m-d' }}" required>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_check_out_date">Check-Out Date *</label>
+          <input type="date" class="form-control" id="id_check_out_date" name="check_out_date" required>
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label" for="id_nights">Nights *</label>
+          <input type="number" class="form-control" id="id_nights" name="nights"
+                 min="1" value="1" required readonly>
+        </div>
+      </div>
+
+      <!-- Rates -->
+      <div class="section-title"><i class="bx bx-dollar me-1"></i> Rates & Charges</div>
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="id_rate_per_night">Rate per Night (Rs.) *</label>
+          <input type="number" class="form-control" id="id_rate_per_night" name="rate_per_night"
+                 step="0.01" min="0" value="0" required>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="id_discount">Discount (Rs.)</label>
+          <input type="number" class="form-control" id="id_discount" name="discount"
+                 step="0.01" min="0" value="0">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-bold">Total Cost</label>
+          <div class="form-control bg-light" id="totalCostDisplay" style="font-weight:700;">Rs. 0</div>
+        </div>
+      </div>
+
+      <!-- Advance Payment -->
+      <div class="section-title"><i class="bx bx-wallet me-1"></i> Advance Payment</div>
+      <div class="row g-3">
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_advance_amount">Advance Amount (Rs.)</label>
+          <input type="number" class="form-control" id="id_advance_amount" name="advance_amount"
+                 step="0.01" min="0" value="0">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_advance_date">Date of Advance</label>
+          <input type="date" class="form-control" id="id_advance_date" name="advance_date">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_advance_bank">Bank Name</label>
+          <select class="form-select" id="id_advance_bank" name="advance_bank">
+            <option value="">Select Bank</option>
+            {% for value, label in banks %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label fw-bold">Balance Due</label>
+          <div class="form-control bg-light" id="balanceDisplay" style="font-weight:700; color:#e53935;">Rs. 0</div>
+        </div>
+      </div>
+
+      <!-- Final Payment -->
+      <div class="section-title"><i class="bx bx-credit-card me-1"></i> Payment</div>
+      <div class="row g-3">
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_payment_type">Payment Type *</label>
+          <select class="form-select" id="id_payment_type" name="payment_type" required>
+            {% for value, label in payment_types %}
+            <option value="{{ value }}" {% if value == 'advance' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_payment_method">Payment Method</label>
+          <select class="form-select" id="id_payment_method" name="payment_method">
+            <option value="">Select Method</option>
+            {% for value, label in payment_methods %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_amount_received">Amount Received (Rs.)</label>
+          <input type="number" class="form-control" id="id_amount_received" name="amount_received"
+                 step="0.01" min="0" value="0">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label" for="id_status">Status</label>
+          <select class="form-select" id="id_status" name="status">
+            {% for value, label in statuses %}
+            <option value="{{ value }}" {% if value == 'confirmed' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="section-title"><i class="bx bx-note me-1"></i> Remarks</div>
+      <div class="row g-3">
+        <div class="col-12">
+          <textarea class="form-control" id="id_remarks" name="remarks" rows="2"
+                    placeholder="Any additional notes"></textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-4 d-flex justify-content-end gap-2">
+        <a href="{% url 'reservations:reservation_list' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-back me-1"></i> Back
+        </a>
+        <button type="reset" class="btn btn-outline-secondary">
+          <i class="bx bx-reset me-1"></i> Reset
+        </button>
+        <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+          <i class="bx bx-check-circle me-1"></i> Create Reservation
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const roomSelect       = document.getElementById('id_room');
+  const checkInInput     = document.getElementById('id_check_in_date');
+  const checkOutInput    = document.getElementById('id_check_out_date');
+  const nightsInput      = document.getElementById('id_nights');
+  const rateInput        = document.getElementById('id_rate_per_night');
+  const discountInput    = document.getElementById('id_discount');
+  const advanceInput     = document.getElementById('id_advance_amount');
+  const amountInput      = document.getElementById('id_amount_received');
+  const totalDisplay     = document.getElementById('totalCostDisplay');
+  const balanceDisplay   = document.getElementById('balanceDisplay');
+  const phoneInput       = document.getElementById('id_phone_number');
+  const guestNameInput   = document.getElementById('id_guest_name');
+  const customerFound    = document.getElementById('customerFound');
+  const customerNameEl   = document.getElementById('customerName');
+
+  /* Auto-fill rate from room */
+  roomSelect.addEventListener('change', function () {
+    const opt = roomSelect.options[roomSelect.selectedIndex];
+    if (opt && opt.dataset.rate) {
+      rateInput.value = opt.dataset.rate;
+      recalc();
+    }
+  });
+
+  /* Auto-calc nights */
+  function calcNights() {
+    const ci = new Date(checkInInput.value);
+    const co = new Date(checkOutInput.value);
+    if (ci && co && co > ci) {
+      nightsInput.value = Math.ceil((co - ci) / 86400000);
+      recalc();
+    }
+  }
+  checkInInput.addEventListener('change', calcNights);
+  checkOutInput.addEventListener('change', calcNights);
+
+  /* Recalculate totals */
+  function recalc() {
+    const rate     = parseFloat(rateInput.value) || 0;
+    const nights   = parseInt(nightsInput.value) || 0;
+    const discount = parseFloat(discountInput.value) || 0;
+    const advance  = parseFloat(advanceInput.value) || 0;
+    const received = parseFloat(amountInput.value) || 0;
+    const total    = rate * nights - discount;
+    const balance  = total - advance - received;
+    totalDisplay.textContent   = 'Rs. ' + total.toLocaleString();
+    balanceDisplay.textContent = 'Rs. ' + balance.toLocaleString();
+    balanceDisplay.style.color = balance > 0 ? '#e53935' : '#2e7d32';
+  }
+  rateInput.addEventListener('input', recalc);
+  discountInput.addEventListener('input', recalc);
+  advanceInput.addEventListener('input', recalc);
+  amountInput.addEventListener('input', recalc);
+
+  /* Customer phone lookup */
+  let lookupTimer = null;
+  phoneInput.addEventListener('input', function () {
+    clearTimeout(lookupTimer);
+    const phone = phoneInput.value.trim();
+    if (phone.length < 7) {
+      customerFound.classList.remove('show');
+      return;
+    }
+    lookupTimer = setTimeout(function () {
+      fetch("{% url 'reservations:customer_lookup' %}?phone=" + encodeURIComponent(phone))
+        .then(r => r.json())
+        .then(data => {
+          if (data.found) {
+            customerNameEl.textContent = data.name;
+            guestNameInput.value = data.name;
+            customerFound.classList.add('show');
+          } else {
+            customerFound.classList.remove('show');
+          }
+        });
+    }, 400);
+  });
+
+  /* Prevent double-submit */
+  document.getElementById('reservationForm').addEventListener('submit', function () {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+  });
+})();
+</script>
+{% endblock %}

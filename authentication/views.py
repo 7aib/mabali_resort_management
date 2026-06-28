@@ -16,28 +16,23 @@ from .forms import LoginForm
 def _validate_phone_number(phone_number: str) -> tuple[bool, str]:
     """
     Validate phone number format.
-    
+
     Args:
-        phone_number: Phone number to validate (can contain +, spaces, dashes, parentheses)
-    
+        phone_number: Phone number in +92XXXXXXXXXX format (13 chars)
+
     Returns:
         Tuple of (is_valid: bool, error_message: str)
     """
     if not phone_number or not phone_number.strip():
         # Phone number is optional
         return True, ""
-    
+
     phone_number = phone_number.strip()
-    
-    # Pattern allows: +, digits, spaces, dashes, parentheses
-    if not re.match(r'^\+?[0-9\s\-\(\)]{7,15}$', phone_number):
-        return False, "Phone number must be 7-15 characters (digits, +, space, dash, or parentheses)"
-    
-    # Count actual digits (exclude special characters)
-    digit_count = len(re.sub(r'\D', '', phone_number))
-    if digit_count < 7 or digit_count > 15:
-        return False, f"Phone number must contain 7-15 digits (currently has {digit_count})"
-    
+
+    # Enforce +92 prefix pattern: +92 followed by 10 digits
+    if not re.match(r'^\+92[0-9]{10}$', phone_number):
+        return False, "Phone number must be in +92XXXXXXXXXX format (e.g. +9230112345678)"
+
     return True, ""
 
 

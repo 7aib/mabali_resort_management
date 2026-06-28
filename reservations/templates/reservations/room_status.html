@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Room Status — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .list-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .list-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .list-card .card-header { border-bottom-color: #3a3b55; }
+
+  .status-summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .status-stat {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 24px;
+    min-width: 160px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    text-align: center;
+  }
+  .dark-style .status-stat { background: #2b2c48; }
+  .status-stat .stat-value { font-size: 1.8rem; font-weight: 700; }
+  .status-stat .stat-label { font-size: .82rem; color: #8c8ca1; margin-top: 2px; }
+
+  .room-card {
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    border-left: 4px solid;
+    margin-bottom: 12px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dark-style .room-card { background: #2b2c48; }
+
+  .room-card.occupied  { border-left-color: #e53935; }
+  .room-card.reserved  { border-left-color: #fb8c00; }
+  .room-card.available { border-left-color: #43a047; }
+
+  .room-card .room-name   { font-weight: 700; font-size: 1rem; }
+  .room-card .room-type   { font-size: .8rem; color: #8c8ca1; }
+  .room-card .room-guest  { font-size: .85rem; margin-top: 2px; }
+  .room-card .room-detail { font-size: .8rem; color: #8c8ca1; }
+
+  .badge-status {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 600;
+  }
+  .badge-occupied  { background: #fdecea; color: #e53935; }
+  .badge-reserved  { background: #fff3e0; color: #fb8c00; }
+  .badge-available { background: #e8f5e9; color: #43a047; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-bed me-2"></i> Room Status</h4>
+    <p>Live status of all rooms — {{ today|date:"l, M d, Y" }}</p>
+  </div>
+  <div>
+    <a href="{% url 'reservations:reservation_create' %}" class="btn btn-light">
+      <i class="bx bx-plus me-1"></i> New Reservation
+    </a>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="status-summary">
+  <div class="status-stat">
+    <div class="stat-value" style="color:#43a047;">{{ available_count }}</div>
+    <div class="stat-label">Available</div>
+  </div>
+  <div class="status-stat">
+    <div class="stat-value" style="color:#fb8c00;">{{ reserved_count }}</div>
+    <div class="stat-label">Reserved</div>
+  </div>
+  <div class="status-stat">
+    <div class="stat-value" style="color:#e53935;">{{ occupied_count }}</div>
+    <div class="stat-label">Occupied</div>
+  </div>
+  <div class="status-stat">
+    <div class="stat-value">{{ total_rooms }}</div>
+    <div class="stat-label">Total Rooms</div>
+  </div>
+</div>
+
+<!-- Room Grid -->
+<div class="card list-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-grid-alt me-2 text-primary"></i>All Rooms</span>
+    <span class="badge bg-label-primary">{{ total_rooms }} rooms</span>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      {% for item in room_data %}
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="room-card {{ item.status }}">
+          <div>
+            <div class="room-name">{{ item.room.name }}</div>
+            <div class="room-type">{{ item.room.get_category_display }}</div>
+            {% if item.guest %}
+            <div class="room-guest fw-semibold">{{ item.guest }}</div>
+            {% endif %}
+            <div class="room-detail">{{ item.detail }}</div>
+          </div>
+          <div>
+            {% if item.status == 'occupied' %}
+              <span class="badge-status badge-occupied">Occupied</span>
+            {% elif item.status == 'reserved' %}
+              <span class="badge-status badge-reserved">Reserved</span>
+            {% else %}
+              <span class="badge-status badge-available">Available</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center text-muted py-4">
+        <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
+        <p class="mb-0 mt-1">No rooms configured.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

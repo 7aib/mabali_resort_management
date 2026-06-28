@@ -17,7 +17,7 @@ class User(TimeStampedModelMixin, SoftDeleteModelMixin, AbstractUser):
         unique=True,
         blank=True,
         null=True,
-        help_text="Enter your phone number (e.g. +923001234567)",
+        help_text="Format: +92XXXXXXXXXX (e.g. +9230112345678)",
     )
 
     def __str__(self) -> str:

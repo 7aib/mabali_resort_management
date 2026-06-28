@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Reservations — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .list-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .list-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .list-card .card-header { border-bottom-color: #3a3b55; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-bed me-2"></i> Reservations</h4>
+    <p>Manage room and hut bookings</p>
+  </div>
+  <div>
+    <a href="{% url 'reservations:reservation_create' %}" class="btn btn-light">
+      <i class="bx bx-plus me-1"></i> New Reservation
+    </a>
+  </div>
+</div>
+
+<!-- Reservations List -->
+<div class="card list-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-list-ul me-2 text-primary"></i>All Reservations</span>
+    <span class="badge bg-label-primary">{{ total_count }} bookings</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Guest</th>
+            <th>Room / Hut</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th class="text-center">Nights</th>
+            <th class="text-end">Rate</th>
+            <th class="text-end">Advance</th>
+            <th class="text-end">Received</th>
+            <th class="text-end">Balance</th>
+            <th>Status</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reservations %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ r.guest_name }}</div>
+              <small class="text-muted">{{ r.phone_number }}</small>
+            </td>
+            <td>{{ r.room.name }}</td>
+            <td>{{ r.check_in_date|date:"M d, Y" }}</td>
+            <td>{{ r.check_out_date|date:"M d, Y" }}</td>
+            <td class="text-center fw-bold">{{ r.nights }}</td>
+            <td class="text-end">Rs. {{ r.rate_per_night|floatformat:0 }}</td>
+            <td class="text-end">Rs. {{ r.advance_amount|floatformat:0 }}</td>
+            <td class="text-end">Rs. {{ r.amount_received|floatformat:0 }}</td>
+            <td class="text-end fw-bold" style="color: {% if r.balance_due > 0 %}#e53935{% else %}#2e7d32{% endif %};">
+              Rs. {{ r.balance_due|floatformat:0 }}
+            </td>
+            <td>
+              <span class="badge
+                {% if r.status == 'confirmed' %}bg-label-info
+                {% elif r.status == 'checked_in' %}bg-label-success
+                {% elif r.status == 'checked_out' %}bg-label-secondary
+                {% elif r.status == 'cancelled' %}bg-label-danger
+                {% endif %}">{{ r.get_status_display }}</span>
+            </td>
+            <td class="text-center">
+              <a href="{% url 'reservations:reservation_create' %}" class="btn btn-sm btn-outline-primary" title="New Booking">
+                <i class="bx bx-plus"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="11" class="text-center text-muted py-4">
+              <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No reservations found.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

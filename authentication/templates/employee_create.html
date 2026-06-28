@@ -53,7 +53,7 @@
               {% include 'components/forms/input.html' with type="email" id="email" label="Email Address" value=employee.email placeholder="Enter email address" %}
             </div>
             <div class="col-md-6">
-              {% include 'components/forms/input.html' with type="tel" id="phone_number" label="Phone Number" value=employee.phone_number|default:'+92' placeholder="+923001234567" pattern="^\+?[0-9\s\-\(\)]{7,15}$" minlength="7" maxlength="15" title="Phone number must be 7-15 digits long. Use format: +923001234567 or 03001234567" help_text="Format: +923001234567 or local format (7-15 digits)" error_id="phone_error" error_msg="Please enter a valid phone number (7-15 digits, may include +, -, space, or parentheses)" %}
+              {% include 'components/forms/input.html' with type="tel" id="phone_number" label="Phone Number" value=employee.phone_number|default:'+92' placeholder="+9230112345678" pattern="^\+92[0-9]{10}$" minlength="13" maxlength="13" title="Format: +92XXXXXXXXXX (e.g. +9230112345678)" help_text="Format: +92XXXXXXXXXX (13 characters)" error_id="phone_error" error_msg="Please enter a valid phone number in +92XXXXXXXXXX format" %}
             </div>
           </div>
 
