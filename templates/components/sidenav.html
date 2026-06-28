@@ -148,7 +148,7 @@
       </li>
 
       <!-- Inventory -->
-      <li class="menu-item {% if request.resolver_match.url_name == 'generator_log' or request.resolver_match.url_name == 'item_list' or request.resolver_match.url_name == 'item_create' or request.resolver_match.url_name == 'ambulance_log' or request.resolver_match.url_name == 'fuel_entry' or request.resolver_match.url_name == 'ammo_entry' %}open{% endif %}">
+      <li class="menu-item {% if request.resolver_match.url_name == 'generator_log' or request.resolver_match.url_name == 'item_list' or request.resolver_match.url_name == 'item_create' or request.resolver_match.url_name == 'ambulance_log' or request.resolver_match.url_name == 'fuel_entry' or request.resolver_match.url_name == 'ammo_entry' or request.resolver_match.url_name == 'stock_management' or request.resolver_match.url_name == 'purchase_orders' %}open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-package"></i>
           <div data-i18n="Inventory">Inventory</div>

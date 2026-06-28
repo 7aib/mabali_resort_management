@@ -1,7 +1,7 @@
 """Inventory management views."""
 from django.utils import timezone
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -16,9 +16,9 @@ User = get_user_model()
 
 
 @login_required
-def inventory_dashboard(request: HttpResponse) -> HttpResponse:
+def inventory_dashboard(request: HttpRequest) -> HttpResponse:
     """Display the inventory dashboard."""
-    return render(request, 'inventory/dashboard.html')
+    return redirect('inventory:stock_management')
 
 
 @login_required
@@ -409,6 +409,8 @@ def purchase_orders_view(request):
         'ammo_required': ammo_required,
         'required_count': fuel_required.count() + ammo_required.count(),
         'ordered_count': fuel_ordered.count() + ammo_ordered.count(),
+        'has_required_items': fuel_required.exists() or ammo_required.exists(),
+        'has_ordered_items': fuel_ordered.exists() or ammo_ordered.exists(),
     }
     return render(request, 'inventory/purchase_orders.html', context)
 

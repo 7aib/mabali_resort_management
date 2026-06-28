@@ -200,6 +200,7 @@
   statusSelect.addEventListener('change', togglePaymentFields);
   paymentSelect.addEventListener('change', toggleFreeReason);
   togglePaymentFields();
+  toggleFreeReason();
 
   /* Prevent double-submit */
   document.getElementById('ammoEntryForm').addEventListener('submit', function () {

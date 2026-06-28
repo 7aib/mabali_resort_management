@@ -120,14 +120,15 @@
               </form>
             </td>
           </tr>
-          {% empty %}
+          {% endfor %}
+          {% if not has_required_items %}
           <tr>
             <td colspan="6" class="text-center text-muted py-4">
               <i class="bx bx-check-circle" style="font-size:1.5rem;"></i>
               <p class="mb-0 mt-1">No pending required items.</p>
             </td>
           </tr>
-          {% endfor %}
+          {% endif %}
         </tbody>
       </table>
     </div>
@@ -211,14 +212,15 @@
               </form>
             </td>
           </tr>
-          {% empty %}
+          {% endfor %}
+          {% if not has_ordered_items %}
           <tr>
             <td colspan="6" class="text-center text-muted py-4">
               <i class="bx bx-check-circle" style="font-size:1.5rem;"></i>
               <p class="mb-0 mt-1">No pending orders.</p>
             </td>
           </tr>
-          {% endfor %}
+          {% endif %}
         </tbody>
       </table>
     </div>
