@@ -245,6 +245,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/phone-lookup.js' %}"></script>
 <script>
 (function () {
   const roomSelect       = document.getElementById('id_room');
@@ -257,10 +258,6 @@
   const amountInput      = document.getElementById('id_amount_received');
   const totalDisplay     = document.getElementById('totalCostDisplay');
   const balanceDisplay   = document.getElementById('balanceDisplay');
-  const phoneInput       = document.getElementById('id_phone_number');
-  const guestNameInput   = document.getElementById('id_guest_name');
-  const customerFound    = document.getElementById('customerFound');
-  const customerNameEl   = document.getElementById('customerName');
 
   /* Auto-fill rate from room */
   roomSelect.addEventListener('change', function () {
@@ -301,28 +298,15 @@
   advanceInput.addEventListener('input', recalc);
   amountInput.addEventListener('input', recalc);
 
-  /* Customer phone lookup */
-  let lookupTimer = null;
-  phoneInput.addEventListener('input', function () {
-    clearTimeout(lookupTimer);
-    const phone = phoneInput.value.trim();
-    if (phone.length < 7) {
-      customerFound.classList.remove('show');
-      return;
-    }
-    lookupTimer = setTimeout(function () {
-      fetch("{% url 'reservations:customer_lookup' %}?phone=" + encodeURIComponent(phone))
-        .then(r => r.json())
-        .then(data => {
-          if (data.found) {
-            customerNameEl.textContent = data.name;
-            guestNameInput.value = data.name;
-            customerFound.classList.add('show');
-          } else {
-            customerFound.classList.remove('show');
-          }
-        });
-    }, 400);
+  /* Phone lookup — uses generic module */
+  PhoneLookup.init({
+    phoneInputId: 'id_phone_number',
+    nameInputId:  'id_guest_name',
+    foundId:      'customerFound',
+    foundNameId:  'customerName',
+    apiUrl:       "{% url 'reservations:customer_lookup' %}?phone=",
+    debounce:     400,
+    minLength:    7
   });
 
   /* Prevent double-submit */

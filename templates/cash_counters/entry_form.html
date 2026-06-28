@@ -125,49 +125,20 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/phone-lookup.js' %}"></script>
 <script>
 (function () {
-  const phoneInput  = document.getElementById('id_phone_number');
-  const nameInput   = document.getElementById('id_name');
-  const statusBadge = document.getElementById('statusBadge');
   const visitSelect = document.getElementById('id_visit_type');
   const paymentSec  = document.getElementById('paymentSection');
 
-  let debounceTimer = null;
-
-  /* ── Mirrors the CSS classes defined in status_badge.html ── */
-  function setStatus(state, text, icon) {
-    statusBadge.className = 'status-badge-pill ' + state;
-    statusBadge.innerHTML = `<i class="${icon}"></i> ${text}`;
-  }
-
-  /* ── Real-time phone lookup ── */
-  phoneInput.addEventListener('input', function () {
-    const phone = this.value.trim();
-    clearTimeout(debounceTimer);
-
-    if (phone.length < 7) {
-      setStatus('unknown', 'Enter phone to detect status', 'bx bx-loader-circle');
-      return;
-    }
-
-    setStatus('unknown', 'Checking…', 'bx bx-loader-circle bx-spin');
-
-    debounceTimer = setTimeout(function () {
-      fetch(`{% url 'cash_counters:check_customer' %}?phone_number=${encodeURIComponent(phone)}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === 'Old') {
-            setStatus('old-customer', 'Old Customer', 'bx bx-check-circle');
-            if (data.name && !nameInput.value) nameInput.value = data.name;
-          } else if (data.status === 'New') {
-            setStatus('new-customer', 'New Customer', 'bx bx-star');
-          } else {
-            setStatus('unknown', 'Unknown', 'bx bx-question-mark');
-          }
-        })
-        .catch(() => setStatus('unknown', 'Could not verify', 'bx bx-error-circle'));
-    }, 500);
+  /* Phone lookup — uses generic module */
+  PhoneLookup.init({
+    phoneInputId: 'id_phone_number',
+    nameInputId:  'id_name',
+    badgeId:      'statusBadge',
+    apiUrl:       "{% url 'cash_counters:check_customer' %}?phone_number=",
+    debounce:     500,
+    minLength:    7
   });
 
   /* ── Show/hide payment section based on visit type ── */
