@@ -1,6 +1,7 @@
 """Reservations app models."""
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from authentication.models import User
@@ -102,3 +103,26 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     @property
     def balance_due(self):
         return self.total_cost - self.advance_amount - self.amount_received
+
+    def clean(self):
+        """Validate that the room is not already booked for overlapping dates."""
+        super().clean()
+        if not self.room or not self.check_in_date or not self.check_out_date:
+            return
+
+        overlapping = Reservation.objects.filter(
+            room=self.room,
+            is_deleted=False,
+            status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
+            check_in_date__lt=self.check_out_date,
+            check_out_date__gt=self.check_in_date,
+        )
+        if self.pk:
+            overlapping = overlapping.exclude(pk=self.pk)
+
+        if overlapping.exists():
+            conflict = overlapping.first()
+            raise ValidationError(
+                'Room "%s" is already booked from %s to %s (Guest: %s).'
+                % (self.room.name, conflict.check_in_date, conflict.check_out_date, conflict.guest_name)
+            )

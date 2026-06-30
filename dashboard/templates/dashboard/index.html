@@ -31,6 +31,7 @@
   .dark-style .section-card .card-header { border-bottom-color: #3a3b55; }
 
   .badge-status { border-radius: 50px; padding: 3px 10px; font-size: .72rem; font-weight: 600; }
+  .expense-badge { font-size: .7rem; padding: 2px 8px; }
 </style>
 {% endblock %}
 
@@ -38,7 +39,7 @@
 
 {% if request.user.is_superuser or can_view_amounts %}
 
-<!-- ═══════ STAT CARDS ═══════ -->
+<!-- STAT CARDS -->
 <div class="row g-4 mb-4">
 
   <!-- Total Guests Today -->
@@ -73,17 +74,33 @@
     </div>
   </div>
 
-  <!-- Entry Revenue -->
+  <!-- Cash Counter Revenue -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(0,188,212,.12); color:#00bcd4;">
+          <i class="bx bx-wallet"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Cash Counter Revenue</div>
+          <div class="fs-4 fw-bold">Rs. {{ cash_counter_revenue|floatformat:0 }}</div>
+          <small class="text-muted">from entry transactions</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avg Spending Per Person -->
   <div class="col-12 col-sm-6 col-lg-3">
     <div class="card stat-card">
       <div class="card-body d-flex align-items-center gap-3">
         <div class="stat-icon" style="background:rgba(255,152,0,.12); color:#f57c00;">
-          <i class="bx bx-ticket"></i>
+          <i class="bx bx-trending-up"></i>
         </div>
         <div>
-          <div class="text-muted small">Entry Revenue Today</div>
-          <div class="fs-4 fw-bold">Rs. {{ entry_revenue|floatformat:0 }}</div>
-          <small class="text-muted">from paid entries</small>
+          <div class="text-muted small">Avg Spending / Person</div>
+          <div class="fs-4 fw-bold">Rs. {{ avg_spending_per_person|floatformat:0 }}</div>
+          <small class="text-muted">Cash Counter / {{ total_guests }} guests</small>
         </div>
       </div>
     </div>
@@ -99,7 +116,7 @@
         <div>
           <div class="text-muted small">Rooms</div>
           <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
-          <small class="text-muted">{{ occupied_count }} occupied · {{ available_count }} free</small>
+          <small class="text-muted">{{ occupied_count }} occupied · {{ reserved_count }} reserved · {{ available_count }} free</small>
         </div>
       </div>
     </div>
@@ -107,10 +124,79 @@
 
 </div>
 
-<!-- ═══════ SECOND ROW ═══════ -->
+<!-- SECOND ROW: Cash Register + Cash Handover -->
 <div class="row g-4 mb-4">
 
-  <!-- POS Breakdown -->
+  <!-- Cash Register -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(76,175,80,.12); color:#4caf50;">
+          <i class="bx bx-money-withdraw"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Cash Register</div>
+          <div class="fs-4 fw-bold">Rs. {{ total_cash_register|floatformat:0 }}</div>
+          <small class="text-muted">{{ cash_register_count }} entries today</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cash Handover -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(33,150,243,.12); color:#2196f3;">
+          <i class="bx bx-transfer"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Cash Handover</div>
+          <div class="fs-4 fw-bold">Rs. {{ total_cash_handover|floatformat:0 }}</div>
+          <small class="text-muted">{{ cash_handover_count }} handovers today</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Orders -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(255,87,34,.12); color:#ff5722;">
+          <i class="bx bx-package"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Pending Orders</div>
+          <div class="fs-4 fw-bold">{{ pending_orders }}</div>
+          <small class="text-muted">fuel + ammo required</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry Revenue -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(156,39,176,.12); color:#9c27b0;">
+          <i class="bx bx-dollar"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Entry Revenue</div>
+          <div class="fs-4 fw-bold">Rs. {{ entry_revenue|floatformat:0 }}</div>
+          <small class="text-muted">from paid entries</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SECOND ROW: POS by Counter + Guest Breakdown + Room Status -->
+<div class="row g-4 mb-4">
+
+  <!-- POS Breakdown by Counter -->
   <div class="col-12 col-lg-4">
     <div class="card section-card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -138,7 +224,7 @@
     </div>
   </div>
 
-  <!-- Guest Visit Breakdown -->
+  <!-- Guest Breakdown -->
   <div class="col-12 col-lg-4">
     <div class="card section-card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -189,8 +275,8 @@
         </div>
         <hr>
         <div class="d-flex justify-content-between">
-          <span>Occupancy</span>
-          <span class="fw-bold">{% widthratio occupied_count total_rooms 100 %}%</span>
+          <span>Night Stay Revenue</span>
+          <span class="fw-bold">Rs. {{ night_stay_revenue|floatformat:0 }}</span>
         </div>
       </div>
     </div>
@@ -198,33 +284,84 @@
 
 </div>
 
-<!-- ═══════ THIRD ROW ═══════ -->
+<!-- Active Reservations (Confirmed + Checked In) -->
+<div class="card section-card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-calendar-check me-2 text-primary"></i>Active Reservations (Confirmed + Checked In)</span>
+    <span class="badge bg-label-primary">{{ active_reservations|length }} reservations</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Guest</th>
+            <th>Phone</th>
+            <th>Room</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th>Nights</th>
+            <th>Status</th>
+            <th class="text-end">Rate/Night</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for res in active_reservations %}
+          <tr>
+            <td class="fw-semibold">{{ res.guest_name|default:res.customer.get_full_name|default:res.customer.username }}</td>
+            <td><small>{{ res.phone_number|default:res.customer.phone_number|default:"—" }}</small></td>
+            <td><span class="badge bg-label-primary">{{ res.room.name }}</span></td>
+            <td>{{ res.check_in_date|date:"M d, Y" }}</td>
+            <td>{{ res.check_out_date|date:"M d, Y" }}</td>
+            <td class="text-center">{{ res.nights }}</td>
+            <td>
+              {% if res.status == 'checked_in' %}
+                <span class="badge bg-label-success">Checked In</span>
+              {% else %}
+                <span class="badge bg-label-warning">Confirmed</span>
+              {% endif %}
+            </td>
+            <td class="text-end fw-bold">Rs. {{ res.rate_per_night|floatformat:0 }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">
+              <i class="bx bx-calendar-x" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No active reservations</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- THIRD ROW: Trust Amount + Free Bills + Refunds -->
 <div class="row g-4 mb-4">
 
-  <!-- Free / Complimentary Bills -->
-  <div class="col-12 col-lg-6">
+  <!-- Trust Amount (Advance Payments) -->
+  <div class="col-12 col-lg-4">
     <div class="card section-card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bx bx-gift me-2 text-warning"></i>Free / Complimentary Bills</span>
-        <span class="badge bg-label-warning">{{ free_bill_count }} today</span>
+        <span><i class="bx bx-money me-2 text-info"></i>Trust Amount (Advance Paid)</span>
+        <span class="badge bg-label-info">Rs. {{ total_trust_amount|floatformat:0 }}</span>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover mb-0">
             <thead class="table-light">
-              <tr><th>Guest</th><th>Head</th><th>Dept</th><th>Status</th><th class="text-end">Amount</th></tr>
+              <tr><th>Guest</th><th>Room</th><th class="text-end">Advance</th></tr>
             </thead>
             <tbody>
-              {% for b in free_bills %}
+              {% for res in trust_amounts %}
               <tr>
-                <td>{{ b.guest_name|default:"—" }}</td>
-                <td><span class="badge bg-label-info">{{ b.get_head_display }}</span></td>
-                <td>{{ b.get_department_display }}</td>
-                <td><span class="badge bg-label-secondary">{{ b.get_bill_status_display }}</span></td>
-                <td class="text-end fw-bold">Rs. {{ b.total_bill_amount|floatformat:0 }}</td>
+                <td>{{ res.guest_name|default:res.customer.get_full_name|default:res.customer.username }}</td>
+                <td><span class="badge bg-label-primary">{{ res.room.name }}</span></td>
+                <td class="text-end fw-bold">Rs. {{ res.advance_amount|floatformat:0 }}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="5" class="text-center text-muted py-3">No complimentary bills today</td></tr>
+              <tr><td colspan="3" class="text-center text-muted py-3">No advance payments today</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -233,8 +370,44 @@
     </div>
   </div>
 
+  <!-- Free / Complimentary Bills -->
+  <div class="col-12 col-lg-4">
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-gift me-2 text-warning"></i>Free / Complimentary</span>
+        <span class="badge bg-label-warning">{{ free_bill_count }} today</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Guest</th><th>Head</th><th class="text-end">Amount</th></tr>
+            </thead>
+            <tbody>
+              {% for b in free_bills %}
+              <tr>
+                <td>{{ b.guest_name|default:"—" }}</td>
+                <td><span class="badge bg-label-info">{{ b.get_head_display }}</span></td>
+                <td class="text-end fw-bold">Rs. {{ b.total_bill_amount|floatformat:0 }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-muted py-3">No complimentary bills today</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if free_bills %}
+        <div class="p-3 d-flex justify-content-between border-top small">
+          <span>Total: Rs. {{ free_bills_total|floatformat:0 }}</span>
+          <span class="text-danger">Discount: Rs. {{ free_bills_discount|floatformat:0 }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
   <!-- Ticket Refunds -->
-  <div class="col-12 col-lg-6">
+  <div class="col-12 col-lg-4">
     <div class="card section-card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bx bx-undo me-2 text-info"></i>Ticket Refunds</span>
@@ -251,7 +424,7 @@
               <tr>
                 <td class="fw-bold">{{ r.no_of_tickets }}</td>
                 <td>Rs. {{ r.rate_per_ticket|floatformat:0 }}</td>
-                <td><span class="badge bg-label-warning">{{ r.get_reason_display }}</span></td>
+                <td><span class="badge bg-label-warning expense-badge">{{ r.get_reason_display }}</span></td>
                 <td class="text-end fw-bold" style="color:#e53935;">Rs. {{ r.total_amount_refunded|floatformat:0 }}</td>
               </tr>
               {% empty %}
@@ -266,24 +439,119 @@
 
 </div>
 
-<!-- ═══════ FOURTH ROW ═══════ -->
+<!-- FOURTH ROW: Room Bookings + Today's Events + Expenses -->
 <div class="row g-4 mb-4">
 
-  <!-- Pending Orders -->
-  <div class="col-12 col-md-6 col-lg-3">
-    <div class="card stat-card">
-      <div class="card-body d-flex align-items-center gap-3">
-        <div class="stat-icon" style="background:rgba(255,87,34,.12); color:#ff5722;">
-          <i class="bx bx-package"></i>
-        </div>
-        <div>
-          <div class="text-muted small">Pending Orders</div>
-          <div class="fs-4 fw-bold">{{ pending_orders }}</div>
-          <small class="text-muted">fuel + ammo required</small>
+  <!-- Room Bookings / Night Stay -->
+  <div class="col-12 col-lg-4">
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-calendar-check me-2 text-primary"></i>Room Bookings Today</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Guest</th><th>Room</th><th>Type</th><th>Amount</th></tr>
+            </thead>
+            <tbody>
+              {% for res in today_checkins %}
+              <tr>
+                <td>{{ res.guest_name|default:res.customer.get_full_name|default:res.customer.username }}</td>
+                <td><span class="badge bg-label-success">{{ res.room.name }}</span></td>
+                <td><small class="text-success">Check-in</small></td>
+                <td class="fw-bold">Rs. {{ res.rate_per_night|floatformat:0 }}</td>
+              </tr>
+              {% endfor %}
+              {% for res in today_checkouts %}
+              <tr>
+                <td>{{ res.guest_name|default:res.customer.get_full_name|default:res.customer.username }}</td>
+                <td><span class="badge bg-label-warning">{{ res.room.name }}</span></td>
+                <td><small class="text-warning">Check-out</small></td>
+                <td class="fw-bold">Rs. {{ res.rate_per_night|floatformat:0 }}</td>
+              </tr>
+              {% endfor %}
+              {% if not today_checkins and not today_checkouts %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No bookings today</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Today's Events -->
+  <div class="col-12 col-lg-4">
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-calendar-event me-2 text-danger"></i>Today's Events</span>
+        <span class="badge bg-label-danger">{{ event_count }} events</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Guest</th><th>Location</th><th>Type</th><th class="text-end">Amount</th></tr>
+            </thead>
+            <tbody>
+              {% for event in events_today %}
+              <tr>
+                <td class="fw-semibold">{{ event.guest_name }}</td>
+                <td>{{ event.location }}</td>
+                <td><span class="badge bg-label-danger expense-badge">{{ event.event_type }}</span></td>
+                <td class="text-end fw-bold">Rs. {{ event.amount|floatformat:0 }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No events today</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Expenses / Refunds -->
+  <div class="col-12 col-lg-4">
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-revision me-2 text-warning"></i>Today's Expenses</span>
+        <span class="badge bg-label-warning">Rs. {{ total_expenses|floatformat:0 }}</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Type</th><th>Description</th><th class="text-end">Amount</th></tr>
+            </thead>
+            <tbody>
+              {% for item in expense_items %}
+              <tr>
+                <td>
+                  {% if item.type == 'Ticket Refund' %}
+                    <span class="badge bg-label-info expense-badge">{{ item.type }}</span>
+                  {% else %}
+                    <span class="badge bg-label-warning expense-badge">{{ item.type }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ item.description }}</td>
+                <td class="text-end fw-bold" style="color:#e53935;">Rs. {{ item.amount|floatformat:0 }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-muted py-3">No expenses today</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FIFTH ROW: All-time Stats -->
+<div class="row g-4 mb-4">
 
   <!-- All-time Stats -->
   <div class="col-12 col-md-6 col-lg-3">
@@ -330,7 +598,7 @@
 
 </div>
 
-<!-- ═══════ RECENT TRANSACTIONS ═══════ -->
+<!-- RECENT TRANSACTIONS -->
 <div class="card section-card mb-4">
   <div class="card-header d-flex justify-content-between align-items-center">
     <span><i class="bx bx-history me-2 text-primary"></i>Recent Entry Transactions</span>
@@ -389,7 +657,7 @@
 
 {% else %}
 
-<!-- ═══════ REGULAR USER DASHBOARD ═══════ -->
+<!-- REGULAR USER DASHBOARD -->
 <div class="row justify-content-center">
   <div class="col-12 col-md-8 col-lg-6">
     <div class="card">

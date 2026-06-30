@@ -5,7 +5,7 @@ from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteMod
 
 
 class FreeBilling(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     guest_name = models.CharField(max_length=150, blank=True, default='')
     bill_type = models.CharField(
         max_length=50, choices=BillTypeChoices.choices,

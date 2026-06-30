@@ -29,7 +29,7 @@ class EntryTransaction(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model
 
 
 class CashHandover(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     counter_type = models.CharField(max_length=50, choices=CounterTypeChoices.choices)
     cashier = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cash_handovers')
     cash_amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -44,7 +44,7 @@ class CashHandover(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 
 
 class CashRegister(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     counter_type = models.CharField(max_length=50, choices=CounterTypeChoices.choices)
     amount_received = models.DecimalField(max_digits=12, decimal_places=2)
     received_from = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cash_register_given')
@@ -60,7 +60,7 @@ class CashRegister(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 
 
 class TicketRefund(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     no_of_tickets = models.PositiveIntegerField(default=1)
     rate_per_ticket = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount_refunded = models.DecimalField(max_digits=12, decimal_places=2, default=0)

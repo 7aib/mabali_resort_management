@@ -5,7 +5,7 @@ from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteMod
 
 
 class POS(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     counter_type = models.CharField(max_length=50, choices=CounterTypeChoices.choices)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=POSPaymentMethodChoices.choices)

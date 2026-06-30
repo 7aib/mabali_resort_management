@@ -6,6 +6,7 @@ from django.http import HttpRequest, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from authentication.choices import UserRoles
@@ -74,6 +75,13 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
             return redirect('reservations:reservation_create')
 
         try:
+            check_in_date_obj = timezone.datetime.strptime(check_in_date, '%Y-%m-%d').date()
+            check_out_date_obj = timezone.datetime.strptime(check_out_date, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid date format.')
+            return redirect('reservations:reservation_create')
+
+        try:
             room = Room.objects.get(pk=room_id, is_deleted=False)
         except Room.DoesNotExist:
             messages.error(request, 'Invalid room selected.')
@@ -81,16 +89,33 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
 
         customer = _get_or_create_customer(phone_number, guest_name)
 
+        # Direct overlap check in view
+        overlapping = Reservation.objects.filter(
+            room=room,
+            is_deleted=False,
+            status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
+            check_in_date__lt=check_out_date_obj,
+            check_out_date__gt=check_in_date_obj,
+        )
+        if overlapping.exists():
+            conflict = overlapping.first()
+            messages.error(
+                request,
+                'Room "%s" is already booked from %s to %s (Guest: %s).'
+                % (room.name, conflict.check_in_date, conflict.check_out_date, conflict.guest_name)
+            )
+            return redirect('reservations:reservation_create')
+
         try:
-            reservation = Reservation.objects.create(
+            reservation = Reservation(
                 customer=customer,
                 guest_name=guest_name,
                 phone_number=phone_number,
                 no_of_adults=int(no_of_adults),
                 no_of_kids=int(no_of_kids),
                 room=room,
-                check_in_date=check_in_date,
-                check_out_date=check_out_date,
+                check_in_date=check_in_date_obj,
+                check_out_date=check_out_date_obj,
                 nights=int(nights),
                 rate_per_night=Decimal(str(rate_per_night)),
                 advance_amount=Decimal(str(advance_amount)),
@@ -103,8 +128,14 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
                 remarks=remarks,
                 created_by=request.user,
             )
+            reservation.full_clean()
+            reservation.save()
             messages.success(request, 'Reservation created for %s.' % guest_name)
             return redirect('reservations:reservation_list')
+        except ValidationError as e:
+            error_msg = e.messages[0] if e.messages else str(e)
+            messages.error(request, error_msg)
+            return redirect('reservations:reservation_create')
         except Exception as e:
             messages.error(request, 'Error creating reservation: %s' % str(e))
             return redirect('reservations:reservation_create')
@@ -172,6 +203,13 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
             return redirect('reservations:reservation_edit', pk=pk)
 
         try:
+            check_in_date_obj = timezone.datetime.strptime(check_in_date, '%Y-%m-%d').date()
+            check_out_date_obj = timezone.datetime.strptime(check_out_date, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid date format.')
+            return redirect('reservations:reservation_edit', pk=pk)
+
+        try:
             room = Room.objects.get(pk=room_id, is_deleted=False)
         except Room.DoesNotExist:
             messages.error(request, 'Invalid room selected.')
@@ -179,14 +217,31 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
 
         customer = _get_or_create_customer(phone_number, guest_name)
 
+        # Direct overlap check in view (exclude current reservation)
+        overlapping = Reservation.objects.filter(
+            room=room,
+            is_deleted=False,
+            status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
+            check_in_date__lt=check_out_date_obj,
+            check_out_date__gt=check_in_date_obj,
+        ).exclude(pk=pk)
+        if overlapping.exists():
+            conflict = overlapping.first()
+            messages.error(
+                request,
+                'Room "%s" is already booked from %s to %s (Guest: %s).'
+                % (room.name, conflict.check_in_date, conflict.check_out_date, conflict.guest_name)
+            )
+            return redirect('reservations:reservation_edit', pk=pk)
+
         reservation.customer = customer
         reservation.guest_name = guest_name
         reservation.phone_number = phone_number
         reservation.no_of_adults = int(no_of_adults)
         reservation.no_of_kids = int(no_of_kids)
         reservation.room = room
-        reservation.check_in_date = check_in_date
-        reservation.check_out_date = check_out_date
+        reservation.check_in_date = check_in_date_obj
+        reservation.check_out_date = check_out_date_obj
         reservation.nights = int(nights)
         reservation.rate_per_night = Decimal(str(rate_per_night))
         reservation.advance_amount = Decimal(str(advance_amount))
@@ -198,7 +253,14 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
         reservation.payment_method = payment_method
         reservation.status = status
         reservation.remarks = remarks
-        reservation.save()
+
+        try:
+            reservation.full_clean()
+            reservation.save()
+        except ValidationError as e:
+            error_msg = e.messages[0] if e.messages else str(e)
+            messages.error(request, error_msg)
+            return redirect('reservations:reservation_edit', pk=pk)
 
         messages.success(request, 'Reservation updated for %s.' % guest_name)
         return redirect('reservations:reservation_list')

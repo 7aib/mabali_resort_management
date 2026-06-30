@@ -30,7 +30,7 @@ class InventoryItem(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     """Log fuel transactions (purchases, issuances)."""
 
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_fuel_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='fuel_txns')
     transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices)
@@ -96,7 +96,7 @@ class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Mod
 class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     """Log ammunition transactions (received, fired)."""
 
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_ammo_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ammo_txns')
     transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices)
@@ -168,7 +168,7 @@ class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
 class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     """Log ambulance trips including distance and medical expenses."""
 
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
     patient_name = models.CharField(max_length=150, default='')
     patient_type = models.CharField(max_length=20, choices=PatientTypeChoices.choices, default=PatientTypeChoices.LOCAL)
     ambulance = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ambulance_logs')
