@@ -49,7 +49,30 @@
     <span><i class="bx bx-list-ul me-2 text-primary"></i>All Items</span>
     <span class="badge bg-label-primary">{{ items|length }} items</span>
   </div>
-  <div class="card-body p-0">
+  <div class="card-body">
+    <!-- Search and Filter -->
+    <form method="get" class="row g-3 mb-4">
+      <div class="col-12 col-md-6">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bx bx-search"></i></span>
+          <input type="text" class="form-control" name="search" placeholder="Search items by name, supplier, or notes..." value="{{ search_query }}">
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <select class="form-select" name="category">
+          <option value="">All Categories</option>
+          {% for val, text in categories %}
+          <option value="{{ val }}" {% if val == category_filter %}selected{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bx bx-filter me-1"></i> Filter
+        </button>
+      </div>
+    </form>
+    
     <div class="table-responsive">
       <table class="table table-hover mb-0">
         <thead class="table-light">
@@ -73,6 +96,9 @@
             <td>{{ item.supplier|default:"—" }}</td>
             <td><small class="text-muted">{{ item.created_at|date:"M d, Y" }}</small></td>
             <td class="text-center">
+              <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                <i class="bx bx-edit"></i>
+              </a>
               <form method="post" action="{% url 'inventory:item_delete' item.pk %}" class="d-inline" onsubmit="return confirm('Delete {{ item.name }}?')">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">

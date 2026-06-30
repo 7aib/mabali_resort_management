@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 from authentication.choices import UserRoles
 from mabali_resort_management.decorators import roles_required
@@ -63,8 +64,25 @@ def inventory_item_create_view(request):
 def inventory_item_list_view(request):
     items = InventoryItem.objects.filter(is_deleted=False).order_by('-created_at')
     
+    # Search filter
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        items = items.filter(
+            Q(name__icontains=search_query) |
+            Q(supplier__icontains=search_query) |
+            Q(notes__icontains=search_query)
+        )
+    
+    # Category filter
+    category_filter = request.GET.get('category', '').strip()
+    if category_filter:
+        items = items.filter(category=category_filter)
+    
     context = {
         'items': items,
+        'search_query': search_query,
+        'category_filter': category_filter,
+        'categories': AssetCategoryChoices.choices,
     }
     return render(request, 'inventory/item_list.html', context)
 
@@ -87,6 +105,46 @@ def inventory_item_delete_view(request, pk):
         return redirect('inventory:item_list')
     
     return redirect('inventory:item_list')
+
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@log_errors
+def inventory_item_edit_view(request, pk):
+    try:
+        item = InventoryItem.objects.get(pk=pk, is_deleted=False)
+    except InventoryItem.DoesNotExist:
+        messages.error(request, 'Item not found.')
+        return redirect('inventory:item_list')
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        category = request.POST.get('category')
+        stock_quantity = request.POST.get('stock_quantity', 0)
+        unit = request.POST.get('unit', '')
+        supplier = request.POST.get('supplier', '')
+        notes = request.POST.get('notes', '')
+        
+        if not name or not category:
+            messages.error(request, 'Name and category are required.')
+            return redirect('inventory:item_edit', pk=pk)
+        
+        item.name = name
+        item.category = category
+        item.stock_quantity = stock_quantity
+        item.unit = unit
+        item.supplier = supplier
+        item.notes = notes
+        item.save()
+        
+        messages.success(request, '"%s" updated successfully.' % item.name)
+        return redirect('inventory:item_list')
+    
+    context = {
+        'item': item,
+        'categories': AssetCategoryChoices.choices,
+    }
+    return render(request, 'inventory/item_edit.html', context)
 
 
 @login_required

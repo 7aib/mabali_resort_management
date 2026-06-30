@@ -1,6 +1,4 @@
 """Dashboard views for displaying resort management data."""
-from datetime import date
-
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -24,7 +22,7 @@ from error_logs.decorators import log_errors
 @log_errors
 def dashboard_view(request: HttpResponse) -> HttpResponse:
     """Display the main dashboard with financial and operational metrics."""
-    today = date.today()
+    today = timezone.localdate()
 
     # ── POS totals today by counter type ──
     pos_qs = POS.objects.filter(date=today)
