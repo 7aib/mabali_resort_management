@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from authentication.choices import UserRoles
-from .models import EntryCounterForm, EntryTransaction, CashHandover, CashRegister
-from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices, CounterTypeChoices
+from .models import EntryCounterForm, EntryTransaction, CashHandover, CashRegister, TicketRefund
+from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices, CounterTypeChoices, TicketRefundReasonChoices
 from mabali_resort_management.constants import PAID_VISIT_PRICE
 from error_logs.decorators import log_errors
 
@@ -224,3 +224,44 @@ def cash_register_view(request):
         'today': today,
     }
     return render(request, 'cash_counters/cash_register.html', context)
+
+
+@login_required
+@log_errors
+def ticket_refund_view(request):
+    today = timezone.now().date()
+
+    if request.method == 'POST':
+        date = request.POST.get('date')
+        no_of_tickets = request.POST.get('no_of_tickets', 1)
+        rate_per_ticket = request.POST.get('rate_per_ticket', 0)
+        total_amount_refunded = request.POST.get('total_amount_refunded', 0)
+        reason = request.POST.get('reason')
+        remarks = request.POST.get('remarks', '')
+
+        if not date or not no_of_tickets or not rate_per_ticket or not total_amount_refunded or not reason:
+            messages.error(request, 'All required fields must be filled.')
+            return redirect('cash_counters:ticket_refund')
+
+        TicketRefund.objects.create(
+            date=date,
+            no_of_tickets=int(no_of_tickets),
+            rate_per_ticket=rate_per_ticket,
+            total_amount_refunded=total_amount_refunded,
+            reason=reason,
+            remarks=remarks
+        )
+
+        messages.success(request, 'Ticket refund recorded successfully.')
+        return redirect('cash_counters:ticket_refund')
+
+    today_refunds = TicketRefund.objects.filter(
+        date=today
+    ).order_by('-created_at')
+
+    context = {
+        'reasons': TicketRefundReasonChoices.choices,
+        'today_refunds': today_refunds,
+        'today': today,
+    }
+    return render(request, 'cash_counters/ticket_refund.html', context)

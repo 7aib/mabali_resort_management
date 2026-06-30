@@ -365,7 +365,7 @@ def ammo_entry_view(request):
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER, UserRoles.MAIN_CASHIER)
 @log_errors
 def purchase_orders_view(request):
     fuel_ordered = FuelTransactionLog.objects.filter(
@@ -426,7 +426,7 @@ def purchase_orders_view(request):
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER, UserRoles.MAIN_CASHIER)
 @log_errors
 def stock_management_view(request):
     fuel_items = InventoryItem.objects.filter(category='fuel', is_deleted=False).order_by('name')

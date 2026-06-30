@@ -62,7 +62,7 @@
 
       <!-- Cash Counters - CEO, Cashier, Main Cashier and HR Manager only -->
       {% if request.user.role == 'CEO' or request.user.role == 'CASHIER' or request.user.role == 'MAIN_CASHIER' or request.user.role == 'HR_MANAGER' %}
-      <li class="menu-item {% if request.resolver_match.url_name == 'entry_form' or request.resolver_match.url_name == 'daily_sales' or request.resolver_match.url_name == 'cash_handover' or request.resolver_match.url_name == 'cash_register' %}open{% endif %}">
+      <li class="menu-item {% if request.resolver_match.url_name == 'entry_form' or request.resolver_match.url_name == 'daily_sales' or request.resolver_match.url_name == 'cash_handover' or request.resolver_match.url_name == 'cash_register' or request.resolver_match.url_name == 'ticket_refund' %}open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-calculator"></i>
           <div data-i18n="Cash Counters">Cash Counters</div>
@@ -88,12 +88,18 @@
               <div data-i18n="Cash Register">Cash Register</div>
             </a>
           </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'ticket_refund' %}active{% endif %}">
+            <a href="{% url 'cash_counters:ticket_refund' %}" class="menu-link">
+              <div data-i18n="Ticket Refund">Ticket Refund</div>
+            </a>
+          </li>
         </ul>
       </li>
       {% endif %}
 
       <!-- Finance -->
-      <li class="menu-item {% if request.resolver_match.url_name == 'pos_entry' or request.resolver_match.url_name == 'ticket_refund' %}open{% endif %}">
+      {% if user.role == 'CEO' or user.role == 'ACCOUNTANT' or user.role == 'HR_MANAGER' or user.role == 'MAIN_CASHIER' %}
+      <li class="menu-item {% if request.resolver_match.url_name == 'pos_entry' %}open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-dollar"></i>
           <div data-i18n="Finance">Finance</div>
@@ -102,11 +108,6 @@
           <li class="menu-item {% if request.resolver_match.url_name == 'pos_entry' %}active{% endif %}">
             <a href="{% url 'finance:pos_entry' %}" class="menu-link">
               <div data-i18n="POS Entry">POS Entry</div>
-            </a>
-          </li>
-          <li class="menu-item {% if request.resolver_match.url_name == 'ticket_refund' %}active{% endif %}">
-            <a href="{% url 'finance:ticket_refund' %}" class="menu-link">
-              <div data-i18n="Ticket Refund">Ticket Refund</div>
             </a>
           </li>
           <li class="menu-item">
@@ -126,8 +127,9 @@
           </li>
         </ul>
       </li>
+      {% endif %}
 
-      <!-- Guests -->
+      {% comment %} <!-- Guests -->
       <li class="menu-item">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-user"></i>
@@ -150,7 +152,7 @@
             </a>
           </li>
         </ul>
-      </li>
+      </li> {% endcomment %}
 
       <!-- Inventory -->
       <li class="menu-item {% if request.resolver_match.url_name == 'generator_log' or request.resolver_match.url_name == 'item_list' or request.resolver_match.url_name == 'item_create' or request.resolver_match.url_name == 'ambulance_log' or request.resolver_match.url_name == 'fuel_entry' or request.resolver_match.url_name == 'ammo_entry' or request.resolver_match.url_name == 'stock_management' or request.resolver_match.url_name == 'purchase_orders' %}open{% endif %}">
@@ -191,6 +193,7 @@
               <div data-i18n="Ambulance Log">Ambulance Log</div>
             </a>
           </li>
+          {% if user.role == 'CEO' or user.role == 'ACCOUNTANT' or user.role == 'HR_MANAGER' or user.role == 'MAIN_CASHIER' %}
           <li class="menu-item {% if request.resolver_match.url_name == 'stock_management' %}active{% endif %}">
             <a href="{% url 'inventory:stock_management' %}" class="menu-link">
               <div data-i18n="Stock Management">Stock Management</div>
@@ -201,6 +204,7 @@
               <div data-i18n="Purchase Orders">Purchase Orders</div>
             </a>
           </li>
+          {% endif %}
         </ul>
       </li>
 

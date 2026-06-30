@@ -44,3 +44,9 @@ class CounterTypeChoices(models.TextChoices):
     NIGHT_STAY = 'Night Stay', 'Night Stay'
     GROUP_EVENT = 'Group/Event', 'Group/Event'
     AUCTION = 'Auction', 'Auction'
+
+
+class TicketRefundReasonChoices(models.TextChoices):
+    WEATHER = 'Weather Cancellation', 'Weather Cancellation'
+    RESTAURANT_TAX = 'Restaurant 6% Tax Paid Online', 'Restaurant 6% Tax Paid Online'
+    OTHER = 'Other', 'Other'

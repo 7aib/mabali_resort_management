@@ -31,16 +31,6 @@
   .history-card { margin-top: 28px; }
 
   .submit-btn { min-width: 160px; font-weight: 700; }
-
-  .refund-total {
-    background: #fff3e0;
-    border: 1px solid #ffcc80;
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: #e65100;
-  }
 </style>
 {% endblock %}
 
@@ -52,10 +42,6 @@
     <h4><i class="bx bx-undo me-2"></i> Ticket Refund</h4>
     <p>Record ticket refunds for weather cancellations, tax adjustments, or other reasons</p>
   </div>
-  <div class="text-end d-none d-md-block">
-    <div style="font-size:2rem; opacity:.6;">🎫</div>
-    <small>{{ PROJECT_NAME }}</small>
-  </div>
 </div>
 
 <!-- Refund Form Card -->
@@ -64,7 +50,7 @@
     <i class="bx bx-plus-circle text-primary"></i> New Ticket Refund
   </div>
   <div class="card-body">
-    <form method="post" id="refundForm" action="{% url 'finance:ticket_refund' %}">
+    <form method="post" id="refundForm" action="{% url 'cash_counters:ticket_refund' %}">
       {% csrf_token %}
 
       <div class="row g-3">
@@ -177,7 +163,6 @@
   qtyInput.addEventListener('input', calcTotal);
   rateInput.addEventListener('input', calcTotal);
 
-  /* Prevent double-submit */
   document.getElementById('refundForm').addEventListener('submit', function () {
     var btn = document.getElementById('submitBtn');
     btn.disabled = true;

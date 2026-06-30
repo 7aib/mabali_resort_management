@@ -10,8 +10,9 @@ from django.utils import timezone
 from authentication.choices import UserRoles
 from authentication.models import User
 from cash_counters.models import EntryCounterForm, EntryTransaction
-from finance.models import POS, TicketRefund
+from finance.models import POS
 from complementary.models import FreeBilling
+from cash_counters.models import TicketRefund
 from reservations.models import Room, Reservation
 from reservations.choices import ReservationStatusChoices
 from inventory.models import FuelTransactionLog, AmmoTransactionLog

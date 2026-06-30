@@ -9,4 +9,5 @@ urlpatterns = [
     path('cash-counters/check-customer/', views.check_customer_status, name='check_customer'),
     path('cash-counters/cash-handover/', views.cash_handover_view, name='cash_handover'),
     path('cash-counters/cash-register/', views.cash_register_view, name='cash_register'),
+    path('cash-counters/ticket-refund/', views.ticket_refund_view, name='ticket_refund'),
 ]
