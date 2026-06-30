@@ -242,3 +242,37 @@ def employee_delete(request: HttpResponse, pk: int) -> HttpResponse:
         return redirect("employee_dashboard")
     
     return render(request, "employee_delete.html", {"employee": employee})
+
+
+@login_required
+@log_errors
+def change_password_view(request: HttpResponse) -> HttpResponse:
+    """Allow the current user to change their own password."""
+    if request.method == "POST":
+        current_password = request.POST.get("current_password", "")
+        new_password = request.POST.get("new_password", "")
+        confirm_password = request.POST.get("confirm_password", "")
+
+        if not request.user.check_password(current_password):
+            messages.error(request, "Current password is incorrect.")
+            return render(request, "change_password.html")
+
+        if not new_password:
+            messages.error(request, "New password cannot be empty.")
+            return render(request, "change_password.html")
+
+        if new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+            return render(request, "change_password.html")
+
+        if len(new_password) < 8:
+            messages.error(request, "New password must be at least 8 characters long.")
+            return render(request, "change_password.html")
+
+        request.user.set_password(new_password)
+        request.user.save()
+
+        messages.success(request, "Password changed successfully. Please log in again.")
+        return redirect("login")
+
+    return render(request, "change_password.html")
