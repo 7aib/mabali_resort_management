@@ -94,8 +94,8 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
             room=room,
             is_deleted=False,
             status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
-            check_in_date__lt=check_out_date_obj,
-            check_out_date__gt=check_in_date_obj,
+            check_in_date__lte=check_out_date_obj,
+            check_out_date__gte=check_in_date_obj,
         )
         if overlapping.exists():
             conflict = overlapping.first()
@@ -222,8 +222,8 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
             room=room,
             is_deleted=False,
             status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
-            check_in_date__lt=check_out_date_obj,
-            check_out_date__gt=check_in_date_obj,
+            check_in_date__lte=check_out_date_obj,
+            check_out_date__gte=check_in_date_obj,
         ).exclude(pk=pk)
         if overlapping.exists():
             conflict = overlapping.first()

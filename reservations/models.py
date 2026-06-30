@@ -114,8 +114,8 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
             room=self.room,
             is_deleted=False,
             status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
-            check_in_date__lt=self.check_out_date,
-            check_out_date__gt=self.check_in_date,
+            check_in_date__lte=self.check_out_date,
+            check_out_date__gte=self.check_in_date,
         )
         if self.pk:
             overlapping = overlapping.exclude(pk=self.pk)

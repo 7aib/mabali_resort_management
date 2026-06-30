@@ -121,7 +121,7 @@ def dashboard_view(request: HttpResponse) -> HttpResponse:
     occupied_rooms = []
     reserved_rooms = []
     for res in active_reservations:
-        if res.check_in_date <= today < res.check_out_date:
+        if res.check_in_date <= today <= res.check_out_date:
             occupied_count += 1
             occupied_rooms.append(res)
         elif res.check_in_date > today:
