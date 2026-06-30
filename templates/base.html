@@ -48,6 +48,7 @@
       rel="stylesheet"
       href="{% static 'vendor/css/theme-default.css' %}"
       class="template-customizer-theme-css"
+      id="themeStylesheet"
     />
     <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
 
@@ -175,48 +176,42 @@
         const themeIcon = document.getElementById('themeIcon');
         const themeText = document.getElementById('themeText');
         const htmlElement = document.documentElement;
-        
-        // Check for saved theme preference or default to 'light'
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        
-        // Apply saved theme
-        if (currentTheme === 'dark') {
-          htmlElement.classList.remove('light-style');
-          htmlElement.classList.add('dark-style');
-          htmlElement.setAttribute('data-theme', 'theme-dark');
-          themeIcon.classList.remove('bx-moon');
-          themeIcon.classList.add('bx-sun');
-          themeText.textContent = 'Light';
-        }
-        
-        // Toggle theme function
-        function toggleTheme() {
-          if (htmlElement.classList.contains('dark-style')) {
-            // Switch to light mode
-            htmlElement.classList.remove('dark-style');
-            htmlElement.classList.add('light-style');
-            htmlElement.setAttribute('data-theme', 'theme-default');
-            themeIcon.classList.remove('bx-sun');
-            themeIcon.classList.add('bx-moon');
-            themeText.textContent = 'Dark';
-            localStorage.setItem('theme', 'light');
-          } else {
-            // Switch to dark mode
+        const stylesheet = document.getElementById('themeStylesheet');
+        const darkCSS = '{% static "vendor/css/theme-dark.css" %}';
+        const lightCSS = '{% static "vendor/css/theme-default.css" %}';
+
+        function applyTheme(theme) {
+          if (theme === 'dark') {
             htmlElement.classList.remove('light-style');
             htmlElement.classList.add('dark-style');
             htmlElement.setAttribute('data-theme', 'theme-dark');
             themeIcon.classList.remove('bx-moon');
             themeIcon.classList.add('bx-sun');
             themeText.textContent = 'Light';
-            localStorage.setItem('theme', 'dark');
+            stylesheet.href = darkCSS;
+          } else {
+            htmlElement.classList.remove('dark-style');
+            htmlElement.classList.add('light-style');
+            htmlElement.setAttribute('data-theme', 'theme-default');
+            themeIcon.classList.remove('bx-sun');
+            themeIcon.classList.add('bx-moon');
+            themeText.textContent = 'Dark';
+            stylesheet.href = lightCSS;
           }
         }
-        
-        // Add click event listener
+
+        // Apply saved theme on load
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        // Toggle
         if (themeToggle) {
           themeToggle.addEventListener('click', function(e) {
             e.preventDefault();
-            toggleTheme();
+            const current = htmlElement.classList.contains('dark-style') ? 'dark' : 'light';
+            const next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', next);
+            applyTheme(next);
           });
         }
       });
