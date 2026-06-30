@@ -78,16 +78,20 @@
               <div data-i18n="Daily Sales">Daily Sales</div>
             </a>
           </li>
+          {% if request.user.role == 'CASHIER' %}
           <li class="menu-item {% if request.resolver_match.url_name == 'cash_handover' %}active{% endif %}">
             <a href="{% url 'cash_counters:cash_handover' %}" class="menu-link">
               <div data-i18n="Cash Handover">Cash Handover</div>
             </a>
           </li>
+          {% endif %}
+          {% if request.user.role == 'MAIN_CASHIER' %}
           <li class="menu-item {% if request.resolver_match.url_name == 'cash_register' %}active{% endif %}">
             <a href="{% url 'cash_counters:cash_register' %}" class="menu-link">
               <div data-i18n="Cash Register">Cash Register</div>
             </a>
           </li>
+          {% endif %}
           <li class="menu-item {% if request.resolver_match.url_name == 'ticket_refund' %}active{% endif %}">
             <a href="{% url 'cash_counters:ticket_refund' %}" class="menu-link">
               <div data-i18n="Ticket Refund">Ticket Refund</div>

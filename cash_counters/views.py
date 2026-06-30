@@ -9,6 +9,7 @@ from authentication.choices import UserRoles
 from .models import EntryCounterForm, EntryTransaction, CashHandover, CashRegister, TicketRefund
 from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices, CounterTypeChoices, TicketRefundReasonChoices
 from mabali_resort_management.constants import PAID_VISIT_PRICE
+from mabali_resort_management.decorators import roles_required
 from error_logs.decorators import log_errors
 
 User = get_user_model()
@@ -109,6 +110,7 @@ def check_customer_status(request):
 
 
 @login_required
+@roles_required(UserRoles.CASHIER)
 @log_errors
 def cash_handover_view(request):
     today = timezone.now().date()
@@ -171,6 +173,7 @@ def cash_handover_view(request):
 
 
 @login_required
+@roles_required(UserRoles.MAIN_CASHIER)
 @log_errors
 def cash_register_view(request):
     today = timezone.now().date()
