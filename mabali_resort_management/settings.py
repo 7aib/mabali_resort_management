@@ -146,7 +146,7 @@ LOGGING = {
         },
         'database': {
             'level': 'ERROR',
-            'class': 'error_logs.handlers.DatabaseLogHandler',
+            '()': 'error_logs.handlers.DatabaseLogHandler',
             'formatter': 'verbose',
         },
     },
