@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Free Billing — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .form-card,
+  .history-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .form-card .card-header,
+  .history-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .form-card .card-header,
+  .dark-style .history-card .card-header { border-bottom-color: #3a3b55; }
+  .history-card { margin-top: 28px; }
+
+  .submit-btn { min-width: 160px; font-weight: 700; }
+
+  .status-Paid { background:#e8f5e9; color:#2e7d32; }
+  .status-Pending { background:#fff3e0; color:#e65100; }
+  .status-Free { background:#e3f2fd; color:#1565c0; }
+  .status-Discount { background:#fce4ec; color:#c62828; }
+  .status-Package { background:#f3e5f5; color:#7b1fa2; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-receipt me-2"></i> Free Billing</h4>
+    <p>Track complimentary, PR, package, and discount bills across all departments</p>
+  </div>
+</div>
+
+<!-- Form Card -->
+<div class="card form-card">
+  <div class="card-header d-flex align-items-center gap-2">
+    <i class="bx bx-plus-circle text-primary"></i> New Bill Entry
+  </div>
+  <div class="card-body">
+    <form method="post" id="freeBillingForm" action="{% url 'complementary:free_billing' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="row g-3">
+
+        <!-- Date -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/input.html" with id="id_date" name="date" label="Date *" type="date" value=today|date:"Y-m-d" required=True %}
+        </div>
+
+        <!-- Guest Name -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/input.html" with id="id_guest_name" name="guest_name" label="Guest Name" type="text" placeholder="Guest or entity name" %}
+        </div>
+
+        <!-- Bill Type -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/select.html" with id="id_bill_type" name="bill_type" label="Bill Type *" options=bill_type_choices %}
+        </div>
+
+        <!-- Head -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/select.html" with id="id_head" name="head" label="Head *" options=head_choices %}
+        </div>
+
+        <!-- Bill Status -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/select.html" with id="id_bill_status" name="bill_status" label="Bill Status *" options=bill_status_choices %}
+        </div>
+
+        <!-- Invoice No -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/input.html" with id="id_invoice_no" name="invoice_no" label="Invoice No." type="text" placeholder="e.g. INV-001" %}
+        </div>
+
+        <!-- Department -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/select.html" with id="id_department" name="department" label="Department *" options=department_choices %}
+        </div>
+
+        <!-- Total Bill Amount -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/input.html" with id="id_total_bill_amount" name="total_bill_amount" label="Total Bill Amount (Rs.)" type="number" step="0.01" min="0" placeholder="0.00" %}
+        </div>
+
+        <!-- Discount Amount -->
+        <div class="col-12 col-md-3">
+          {% include "components/forms/input.html" with id="id_discount_amount" name="discount_amount" label="Discount Given (Rs.)" type="number" step="0.01" min="0" placeholder="0.00" %}
+        </div>
+
+        <!-- Bill Upload -->
+        <div class="col-12 col-md-3">
+          <label class="form-label fw-semibold" for="id_bill_upload">Bill Upload</label>
+          <input type="file" class="form-control" id="id_bill_upload" name="bill_upload" accept="image/*,.pdf">
+          <small class="text-muted">Image or PDF</small>
+        </div>
+
+        <!-- Net Amount display -->
+        <div class="col-12 col-md-3">
+          <label class="form-label fw-semibold">Net Amount (Rs.)</label>
+          <div class="form-control bg-light" id="netAmountDisplay" style="font-weight:700;">Rs. 0</div>
+        </div>
+
+        <!-- Reference -->
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="id_reference">Reference (Details)</label>
+          <textarea class="form-control" id="id_reference" name="reference" rows="2"
+                    placeholder="Additional details or reference notes"></textarea>
+        </div>
+
+      </div>
+
+      <div class="mt-4 d-flex justify-content-end gap-2">
+        <button type="reset" class="btn btn-outline-secondary">
+          <i class="bx bx-reset me-1"></i> Reset
+        </button>
+        <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+          <i class="bx bx-check-circle me-1"></i> Submit Entry
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Today's Entries -->
+<div class="card history-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-history me-2 text-primary"></i>Today's Bills</span>
+    <span class="badge bg-label-primary">{{ today_entries|length }} entries</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Time</th>
+            <th>Guest</th>
+            <th>Bill Type</th>
+            <th>Head</th>
+            <th>Status</th>
+            <th>Invoice</th>
+            <th>Dept</th>
+            <th class="text-end">Amount</th>
+            <th class="text-end">Discount</th>
+            <th class="text-center">File</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in today_entries %}
+          <tr>
+            <td><small class="text-muted">{{ entry.created_at|time:"H:i" }}</small></td>
+            <td>{{ entry.guest_name|default:"—" }}</td>
+            <td><span class="badge bg-label-primary">{{ entry.get_bill_type_display }}</span></td>
+            <td><span class="badge bg-label-info">{{ entry.get_head_display }}</span></td>
+            <td>
+              {% if entry.bill_status == 'Paid' %}
+                <span class="badge status-Paid">{{ entry.get_bill_status_display }}</span>
+              {% elif entry.bill_status == 'Pending' %}
+                <span class="badge status-Pending">{{ entry.get_bill_status_display }}</span>
+              {% elif entry.bill_status == 'Free' %}
+                <span class="badge status-Free">{{ entry.get_bill_status_display }}</span>
+              {% elif entry.bill_status == 'Paid with Discount' %}
+                <span class="badge status-Discount">{{ entry.get_bill_status_display }}</span>
+              {% elif entry.bill_status == 'Package Bill' %}
+                <span class="badge status-Package">{{ entry.get_bill_status_display }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ entry.get_bill_status_display }}</span>
+              {% endif %}
+            </td>
+            <td>{{ entry.invoice_no|default:"—" }}</td>
+            <td>{{ entry.get_department_display }}</td>
+            <td class="text-end fw-bold">Rs. {{ entry.total_bill_amount|floatformat:0 }}</td>
+            <td class="text-end" style="color:#e53935;">{% if entry.discount_amount %}− Rs. {{ entry.discount_amount|floatformat:0 }}{% else %}—{% endif %}</td>
+            <td class="text-center">
+              {% if entry.bill_upload %}
+                <a href="{{ entry.bill_upload.url }}" class="btn btn-sm btn-outline-primary" target="_blank" title="View Bill">
+                  <i class="bx bx-show"></i>
+                </a>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="text-center text-muted py-4">
+              <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No bills recorded today.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var totalInput = document.getElementById('id_total_bill_amount');
+  var discInput  = document.getElementById('id_discount_amount');
+  var netDisplay = document.getElementById('netAmountDisplay');
+
+  function calcNet() {
+    var total = parseFloat(totalInput.value) || 0;
+    var disc  = parseFloat(discInput.value) || 0;
+    var net   = total - disc;
+    netDisplay.textContent = 'Rs. ' + net.toLocaleString();
+    netDisplay.style.color = net < 0 ? '#e53935' : '';
+  }
+  totalInput.addEventListener('input', calcNet);
+  discInput.addEventListener('input', calcNet);
+
+  document.getElementById('freeBillingForm').addEventListener('submit', function () {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+  });
+})();
+</script>
+{% endblock %}

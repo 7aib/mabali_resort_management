@@ -93,7 +93,7 @@
       {% endif %}
 
       <!-- Finance -->
-      <li class="menu-item {% if request.resolver_match.url_name == 'pos_entry' %}open{% endif %}">
+      <li class="menu-item {% if request.resolver_match.url_name == 'pos_entry' or request.resolver_match.url_name == 'ticket_refund' %}open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-dollar"></i>
           <div data-i18n="Finance">Finance</div>
@@ -102,6 +102,11 @@
           <li class="menu-item {% if request.resolver_match.url_name == 'pos_entry' %}active{% endif %}">
             <a href="{% url 'finance:pos_entry' %}" class="menu-link">
               <div data-i18n="POS Entry">POS Entry</div>
+            </a>
+          </li>
+          <li class="menu-item {% if request.resolver_match.url_name == 'ticket_refund' %}active{% endif %}">
+            <a href="{% url 'finance:ticket_refund' %}" class="menu-link">
+              <div data-i18n="Ticket Refund">Ticket Refund</div>
             </a>
           </li>
           <li class="menu-item">
@@ -222,6 +227,14 @@
             </a>
           </li>
         </ul>
+      </li>
+
+      <!-- Free / Complementary -->
+      <li class="menu-item {% if request.resolver_match.url_name == 'free_billing' %}active{% endif %}">
+        <a href="{% url 'complementary:free_billing' %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-gift"></i>
+          <div data-i18n="Free / Complementary">Free / Complementary</div>
+        </a>
       </li>
 
       <!-- Misc -->

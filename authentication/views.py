@@ -133,7 +133,7 @@ def employee_create(request):
         # Validate phone number
         is_valid, error_msg = _validate_phone_number(phone_number)
         if not is_valid:
-            messages.error(request, f"Phone Number Error: {error_msg}")
+            messages.error(request, 'Phone Number Error: %s' % error_msg)
             return render(
                 request,
                 "employee_create.html",
@@ -209,7 +209,7 @@ def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
         is_valid, error_msg = _validate_phone_number(phone_number)
         
         if not is_valid:
-            messages.error(request, f"Phone Number Error: {error_msg}")
+            messages.error(request, 'Phone Number Error: %s' % error_msg)
             return render(request, "employee_edit.html", {"employee": employee, "roles": UserRoles.choices})
             
         # Check if phone number is already taken
@@ -219,7 +219,7 @@ def employee_edit(request: HttpResponse, pk: int) -> HttpResponse:
         
         try:
             employee.save()
-            messages.success(request, f"Employee '{employee.username}' updated successfully.")
+            messages.success(request, "Employee '%s' updated successfully." % employee.username)
             return redirect("employee_detail", pk=employee.id)
         except IntegrityError as e:
             messages.error(request, "Error: Another employee might already be using this email or username.")
@@ -238,7 +238,7 @@ def employee_delete(request: HttpResponse, pk: int) -> HttpResponse:
     if request.method == "POST":
         username = employee.username
         employee.delete()
-        messages.success(request, f"Employee '{username}' deleted successfully.")
+        messages.success(request, "Employee '%s' deleted successfully." % username)
         return redirect("employee_dashboard")
     
     return render(request, "employee_delete.html", {"employee": employee})

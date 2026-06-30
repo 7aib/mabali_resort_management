@@ -1,201 +1,261 @@
 {% extends "base.html" %}
 {% block title %}Dashboard - {{ PROJECT_NAME }}{% endblock %}
 
+{% block extra_css %}
+<style>
+  .stat-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    border: none;
+    transition: transform .2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+  }
+  .section-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    border: none;
+  }
+  .section-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 16px 20px;
+    font-weight: 700;
+    font-size: .95rem;
+  }
+  .dark-style .section-card .card-header { border-bottom-color: #3a3b55; }
+
+  .badge-status { border-radius: 50px; padding: 3px 10px; font-size: .72rem; font-weight: 600; }
+</style>
+{% endblock %}
+
 {% block content %}
-{% if request.user.is_superuser %}
-<!-- SUPERUSER DASHBOARD - Full Analytics View -->
-<div class="row g-4">
-  <div class="col-12">
-    <div class="alert alert-info d-flex align-items-center">
-      <i class="bx bx-info-circle me-2"></i>
-      <span>Administrator Dashboard - Full Access View</span>
-    </div>
-  </div>
-  
-  <div class="col-12 col-md-6 col-lg-4">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="m-0">POS Summary</h5>
-        <small class="text-muted">Excluding Parasailing</small>
-      </div>
-      <div class="card-body">
-        <ul class="list-group list-group-flush mb-3">
-          {% for c in counters %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>{{ c.name }}</span>
-            <span class="badge bg-label-primary">{{ c.pos|floatformat:0 }}</span>
-          </li>
-          {% endfor %}
-        </ul>
-        <div class="d-flex justify-content-between">
-          <span class="fw-semibold">Total (excl. Parasailing)</span>
-          <span class="fw-bold">{{ total_pos_ex_parasailing|floatformat:0 }}</span>
+
+{% if request.user.is_superuser or can_view_amounts %}
+
+<!-- ═══════ STAT CARDS ═══════ -->
+<div class="row g-4 mb-4">
+
+  <!-- Total Guests Today -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(105,108,255,.12); color:#696cff;">
+          <i class="bx bx-user"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Guests Today</div>
+          <div class="fs-4 fw-bold">{{ total_guests }}</div>
+          <small class="text-muted">{{ new_guests }} new · {{ old_guests }} returning</small>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="col-12 col-md-6 col-lg-4">
-    <div class="card h-100">
-      <div class="card-header"><h5 class="m-0">Guest Entry</h5></div>
-      <div class="card-body">
-        <div class="d-flex justify-content-between mb-2"><span>Adults</span><span>{{ guest_entry.adults }}</span></div>
-        <div class="d-flex justify-content-between mb-2"><span>Kids</span><span>{{ guest_entry.kids }}</span></div>
-        <div class="d-flex justify-content-between mb-2"><span>Total</span><span class="fw-bold">{{ guest_entry.total }}</span></div>
-        <hr>
-        <div class="d-flex justify-content-between"><span>Avg spend per person</span><span class="fw-bold">{{ avg_spend_per_person }}</span></div>
+  <!-- POS Revenue Today -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(46,125,50,.12); color:#2e7d32;">
+          <i class="bx bx-dollar"></i>
+        </div>
+        <div>
+          <div class="text-muted small">POS Revenue Today</div>
+          <div class="fs-4 fw-bold">Rs. {{ total_pos_today|floatformat:0 }}</div>
+          <small class="text-muted">{{ pos_by_counter|length }} counters active</small>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- Entry Revenue -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(255,152,0,.12); color:#f57c00;">
+          <i class="bx bx-ticket"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Entry Revenue Today</div>
+          <div class="fs-4 fw-bold">Rs. {{ entry_revenue|floatformat:0 }}</div>
+          <small class="text-muted">from paid entries</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rooms -->
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(233,30,99,.12); color:#e91e63;">
+          <i class="bx bx-bed"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Rooms</div>
+          <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
+          <small class="text-muted">{{ occupied_count }} occupied · {{ available_count }} free</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════ SECOND ROW ═══════ -->
+<div class="row g-4 mb-4">
+
+  <!-- POS Breakdown -->
   <div class="col-12 col-lg-4">
-    <div class="card h-100">
-      <div class="card-header"><h5 class="m-0">One-step Info (Expenses)</h5></div>
-      <div class="card-body">
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-bar-chart-alt-2 me-2 text-primary"></i>POS by Counter</span>
+        <small class="text-muted">Today</small>
+      </div>
+      <div class="card-body p-0">
         <ul class="list-group list-group-flush">
-          {% for e in expenses %}
-          <li class="list-group-item d-flex justify-content-between">
-            <span>{{ e.title }}</span>
-            <span>{{ e.amount|floatformat:0 }}</span>
+          {% for row in pos_by_counter %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ row.counter_type }}</span>
+            <span class="fw-bold">Rs. {{ row.total|floatformat:0 }}</span>
           </li>
+          {% empty %}
+          <li class="list-group-item text-center text-muted py-3">No POS entries today</li>
           {% endfor %}
         </ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12 col-lg-6">
-    <div class="card h-100">
-      <div class="card-header"><h5 class="m-0">Today's Trust Amounts (Paid)</h5></div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr><th>Payer</th><th>Reference</th><th class="text-end">Amount</th></tr></thead>
-            <tbody>
-              {% for t in trusts_today %}
-              <tr>
-                <td>{{ t.payer }}</td>
-                <td>{{ t.reference }}</td>
-                <td class="text-end">{{ t.amount|floatformat:0 }}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="3" class="text-center text-muted">No trust payments today</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        {% if pos_by_counter %}
+        <div class="p-3 d-flex justify-content-between border-top">
+          <span class="fw-bold">Total</span>
+          <span class="fw-bold">Rs. {{ total_pos_today|floatformat:0 }}</span>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>
 
-  <div class="col-12 col-lg-6">
-    <div class="card h-100">
-      <div class="card-header"><h5 class="m-0">Today's Complimentary</h5></div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr><th>Item</th><th>Qty</th><th>Reason</th></tr></thead>
-            <tbody>
-              {% for c in complimentary %}
-              <tr><td>{{ c.item }}</td><td>{{ c.qty }}</td><td>{{ c.reason }}</td></tr>
-              {% empty %}
-              <tr><td colspan="3" class="text-center text-muted">No complimentary items</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- Guest Visit Breakdown -->
   <div class="col-12 col-lg-4">
-    <div class="card h-100">
-      <div class="card-header"><h5 class="m-0">Rooms / Night Stay</h5></div>
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-group me-2 text-success"></i>Guest Breakdown</span>
+        <small class="text-muted">Today</small>
+      </div>
       <div class="card-body">
-        <div class="d-flex justify-content-between mb-2"><span>Night stay</span><span class="fw-bold">{{ room_bookings.night_stay_count }}</span></div>
-        <div class="d-flex justify-content-between mb-2"><span>Occupied</span><span>{{ room_bookings.rooms_occupied }}</span></div>
-        <div class="d-flex justify-content-between mb-2"><span>Available</span><span>{{ room_bookings.rooms_available }}</span></div>
+        <div class="d-flex justify-content-between mb-2"><span>Adults</span><span class="fw-bold">{{ total_adults }}</span></div>
+        <div class="d-flex justify-content-between mb-2"><span>Kids</span><span class="fw-bold">{{ total_kids }}</span></div>
+        <hr>
+        <div class="d-flex justify-content-between mb-3"><span class="fw-semibold">Total Guests</span><span class="fw-bold">{{ total_guests }}</span></div>
+
+        {% if visit_breakdown %}
+        <div class="small text-muted mb-2 fw-semibold">By Visit Type</div>
+        {% for v in visit_breakdown %}
+        <div class="d-flex justify-content-between mb-1">
+          <span>{{ v.visit_type }}</span>
+          <span class="badge bg-label-primary">{{ v.count }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
       </div>
     </div>
   </div>
 
-  <div class="col-12 col-lg-8">
-    <div class="card h-100">
-      <div class="card-header"><h5 class="m-0">Today's Events</h5></div>
+  <!-- Rooms Status -->
+  <div class="col-12 col-lg-4">
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-building-house me-2 text-danger"></i>Room Status</span>
+        <a href="{% url 'reservations:room_status' %}" class="btn btn-sm btn-outline-primary">View</a>
+      </div>
       <div class="card-body">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr><th>Guest</th><th>Location</th><th>Type</th><th class="text-end">Amount</th></tr></thead>
-            <tbody>
-              {% for e in events_today %}
-                <tr>
-                  <td>{{ e.guest_name }}</td>
-                  <td>{{ e.location }}</td>
-                  <td>{{ e.event_type }}</td>
-                  <td class="text-end">{% if can_view_amounts %}{{ e.amount|floatformat:0 }}{% else %}—{% endif %}</td>
-                </tr>
-              {% empty %}
-                <tr><td colspan="4" class="text-center text-muted">No events today</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Total Rooms</span><span class="fw-bold">{{ total_rooms }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span><i class="bx bx-circle text-danger me-1" style="font-size:.6rem;"></i> Occupied</span>
+          <span class="fw-bold">{{ occupied_count }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span><i class="bx bx-circle text-warning me-1" style="font-size:.6rem;"></i> Reserved</span>
+          <span class="fw-bold">{{ reserved_count }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span><i class="bx bx-circle text-success me-1" style="font-size:.6rem;"></i> Available</span>
+          <span class="fw-bold">{{ available_count }}</span>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between">
+          <span>Occupancy</span>
+          <span class="fw-bold">{% widthratio occupied_count total_rooms 100 %}%</span>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="col-12">
-    <div class="card h-100">
+</div>
+
+<!-- ═══════ THIRD ROW ═══════ -->
+<div class="row g-4 mb-4">
+
+  <!-- Free / Complimentary Bills -->
+  <div class="col-12 col-lg-6">
+    <div class="card section-card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="m-0"><i class="bx bx-receipt me-2 text-primary"></i>Today's Entry Transactions</h5>
-        <a href="{% url 'cash_counters:entry_form' %}" class="btn btn-sm btn-primary">
-          <i class="bx bx-plus me-1"></i> New Entry
-        </a>
+        <span><i class="bx bx-gift me-2 text-warning"></i>Free / Complimentary Bills</span>
+        <span class="badge bg-label-warning">{{ free_bill_count }} today</span>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover mb-0">
             <thead class="table-light">
-              <tr>
-                <th>Time</th>
-                <th>Guest</th>
-                <th>Phone</th>
-                <th>Visit</th>
-                <th>Persons</th>
-                <th>Gate</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th class="text-end">Amount</th>
-              </tr>
+              <tr><th>Guest</th><th>Head</th><th>Dept</th><th>Status</th><th class="text-end">Amount</th></tr>
             </thead>
             <tbody>
-              {% for tx in recent_transactions %}
+              {% for b in free_bills %}
               <tr>
-                <td><small class="text-muted">{{ tx.created_at|time:"H:i" }}</small></td>
-                <td class="fw-semibold">{{ tx.entry_form.customer.get_full_name|default:tx.entry_form.customer.first_name|default:tx.entry_form.customer.username }}</td>
-                <td><small>{{ tx.entry_form.customer.phone_number|default:"—" }}</small></td>
-                <td><span class="badge bg-label-primary">{{ tx.entry_form.visit_type }}</span></td>
-                <td class="text-center">{{ tx.entry_form.no_of_persons }}</td>
-                <td><small>{{ tx.entry_form.gate }}</small></td>
-                <td>
-                  {% if tx.entry_form.status == "New" %}
-                    <span class="badge bg-label-success">New</span>
-                  {% else %}
-                    <span class="badge bg-label-warning">Old</span>
-                  {% endif %}
-                </td>
-                <td>{{ tx.payment_method }}</td>
-                <td class="text-end fw-bold">
-                  {% if can_view_amounts %}Rs. {{ tx.amount|floatformat:0 }}{% else %}—{% endif %}
-                </td>
+                <td>{{ b.guest_name|default:"—" }}</td>
+                <td><span class="badge bg-label-info">{{ b.get_head_display }}</span></td>
+                <td>{{ b.get_department_display }}</td>
+                <td><span class="badge bg-label-secondary">{{ b.get_bill_status_display }}</span></td>
+                <td class="text-end fw-bold">Rs. {{ b.total_bill_amount|floatformat:0 }}</td>
               </tr>
               {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-3">No complimentary bills today</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket Refunds -->
+  <div class="col-12 col-lg-6">
+    <div class="card section-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bx bx-undo me-2 text-info"></i>Ticket Refunds</span>
+        <span class="badge bg-label-info">{{ refund_count }} today · Rs. {{ refund_total|floatformat:0 }}</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Tickets</th><th>Rate/Tkt</th><th>Reason</th><th class="text-end">Refunded</th></tr>
+            </thead>
+            <tbody>
+              {% for r in refunds_today %}
               <tr>
-                <td colspan="9" class="text-center text-muted py-4">
-                  <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
-                  <p class="mb-0 mt-1">No paid entries recorded today.</p>
-                </td>
+                <td class="fw-bold">{{ r.no_of_tickets }}</td>
+                <td>Rs. {{ r.rate_per_ticket|floatformat:0 }}</td>
+                <td><span class="badge bg-label-warning">{{ r.get_reason_display }}</span></td>
+                <td class="text-end fw-bold" style="color:#e53935;">Rs. {{ r.total_amount_refunded|floatformat:0 }}</td>
               </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No refunds today</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -206,8 +266,130 @@
 
 </div>
 
+<!-- ═══════ FOURTH ROW ═══════ -->
+<div class="row g-4 mb-4">
+
+  <!-- Pending Orders -->
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(255,87,34,.12); color:#ff5722;">
+          <i class="bx bx-package"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Pending Orders</div>
+          <div class="fs-4 fw-bold">{{ pending_orders }}</div>
+          <small class="text-muted">fuel + ammo required</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All-time Stats -->
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(0,188,212,.12); color:#00bcd4;">
+          <i class="bx bx-data"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Total Guests (All Time)</div>
+          <div class="fs-4 fw-bold">{{ total_guests_all }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(156,39,176,.12); color:#9c27b0;">
+          <i class="bx bx-dollar"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Total POS (All Time)</div>
+          <div class="fs-4 fw-bold">Rs. {{ total_pos_all|floatformat:0 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(33,150,243,.12); color:#2196f3;">
+          <i class="bx bx-bed"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Total Reservations</div>
+          <div class="fs-4 fw-bold">{{ total_reservations }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════ RECENT TRANSACTIONS ═══════ -->
+<div class="card section-card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-history me-2 text-primary"></i>Recent Entry Transactions</span>
+    <a href="{% url 'cash_counters:entry_form' %}" class="btn btn-sm btn-primary">
+      <i class="bx bx-plus me-1"></i> New Entry
+    </a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Time</th>
+            <th>Guest</th>
+            <th>Phone</th>
+            <th>Visit</th>
+            <th>Persons</th>
+            <th>Gate</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in recent_transactions %}
+          <tr>
+            <td><small class="text-muted">{{ tx.created_at|time:"H:i" }}</small></td>
+            <td class="fw-semibold">{{ tx.entry_form.customer.get_full_name|default:tx.entry_form.customer.first_name|default:tx.entry_form.customer.username }}</td>
+            <td><small>{{ tx.entry_form.customer.phone_number|default:"—" }}</small></td>
+            <td><span class="badge bg-label-primary">{{ tx.entry_form.visit_type }}</span></td>
+            <td class="text-center">{{ tx.entry_form.no_of_persons }}</td>
+            <td><small>{{ tx.entry_form.gate }}</small></td>
+            <td>
+              {% if tx.entry_form.status == "New" %}
+                <span class="badge bg-label-success">New</span>
+              {% else %}
+                <span class="badge bg-label-warning">Old</span>
+              {% endif %}
+            </td>
+            <td>{{ tx.payment_method }}</td>
+            <td class="text-end fw-bold">Rs. {{ tx.amount|floatformat:0 }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center text-muted py-4">
+              <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No paid entries recorded today.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 {% else %}
-<!-- REGULAR USER DASHBOARD - Welcome View -->
+
+<!-- ═══════ REGULAR USER DASHBOARD ═══════ -->
 <div class="row justify-content-center">
   <div class="col-12 col-md-8 col-lg-6">
     <div class="card">
@@ -248,30 +430,17 @@
             </div>
           </div>
         </div>
-        <div class="mt-4">
-          <p class="text-muted mb-0">For assistance or inquiries, please contact your administrator.</p>
-        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// Update current time
 function updateTime() {
-  const now = new Date();
-  const timeString = now.toLocaleTimeString('en-US', {
-    hour12: true,
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-  const timeElement = document.getElementById('currentTime');
-  if (timeElement) {
-    timeElement.textContent = timeString;
-  }
+  var now = new Date();
+  var el = document.getElementById('currentTime');
+  if (el) el.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
 }
-
-// Update time immediately and then every second
 updateTime();
 setInterval(updateTime, 1000);
 </script>

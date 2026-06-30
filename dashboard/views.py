@@ -4,10 +4,18 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.db.models import Sum
+from django.db.models import Sum, Count, Q
+from django.utils import timezone
 
 from authentication.choices import UserRoles
+from authentication.models import User
 from cash_counters.models import EntryCounterForm, EntryTransaction
+from finance.models import POS, TicketRefund
+from complementary.models import FreeBilling
+from reservations.models import Room, Reservation
+from reservations.choices import ReservationStatusChoices
+from inventory.models import FuelTransactionLog, AmmoTransactionLog
+from inventory.choices import StockStatusChoices
 from error_logs.decorators import log_errors
 
 
@@ -17,84 +25,69 @@ def dashboard_view(request: HttpResponse) -> HttpResponse:
     """Display the main dashboard with financial and operational metrics."""
     today = date.today()
 
-    counters = [
-        {"name": "Restaurant", "pos": 0},
-        {"name": "Boating", "pos": 0},
-        {"name": "Parasailing", "pos": 0},  # excluded from POS in totals per rule
-        {"name": "Cafe", "pos": 0},
-    ]
-    total_pos_ex_parasailing = sum(
-        c["pos"] for c in counters if c["name"].lower() != "parasailing"
+    # ── POS totals today by counter type ──
+    pos_qs = POS.objects.filter(date=today)
+    pos_by_counter = (
+        pos_qs.values('counter_type')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')
     )
+    total_pos_today = pos_qs.aggregate(s=Sum('amount'))['s'] or 0
 
-    # ── Live guest entry stats for today ──
+    # ── Guest entry stats today ──
     today_entries = EntryCounterForm.objects.filter(created_at__date=today)
     total_adults = today_entries.aggregate(s=Sum('no_of_persons'))['s'] or 0
-    total_kids   = today_entries.aggregate(s=Sum('no_of_kids'))['s'] or 0
-    guest_entry = {
-        "date":   today,
-        "adults": total_adults,
-        "kids":   total_kids,
-        "total":  total_adults + total_kids,
-    }
+    total_kids = today_entries.aggregate(s=Sum('no_of_kids'))['s'] or 0
+    total_guests = total_adults + total_kids
+    new_guests = today_entries.filter(status='New').count()
+    old_guests = today_entries.filter(status='Old').count()
 
-    avg_spend_per_person = round(
-        (total_pos_ex_parasailing or 0) / (guest_entry["total"] or 1), 2
+    # ── Revenue breakdown today ──
+    entry_revenue = EntryTransaction.objects.filter(
+        created_at__date=today
+    ).aggregate(s=Sum('amount'))['s'] or 0
+
+    free_billing_total = FreeBilling.objects.filter(
+        date=today
+    ).aggregate(s=Sum('total_bill_amount'))['s'] or 0
+
+    refund_total = TicketRefund.objects.filter(
+        date=today
+    ).aggregate(s=Sum('total_amount_refunded'))['s'] or 0
+
+    # ── Complimentary / Free billing today ──
+    free_bills = FreeBilling.objects.filter(date=today).order_by('-created_at')[:10]
+    free_bill_count = FreeBilling.objects.filter(date=today).count()
+
+    # ── Room bookings ──
+    total_rooms = Room.objects.filter(is_deleted=False, is_active=True).count()
+    active_reservations = Reservation.objects.filter(
+        is_deleted=False,
+        status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
     )
+    occupied_count = 0
+    reserved_count = 0
+    for res in active_reservations:
+        if res.check_in_date <= today < res.check_out_date:
+            occupied_count += 1
+        elif res.check_in_date > today:
+            reserved_count += 1
+    available_count = total_rooms - occupied_count - reserved_count
 
-    expenses = [
-        {"title": "Fuel & Maintenance", "amount": 0},
-        {"title": "Supplies", "amount": 0},
-        {"title": "Utilities", "amount": 0},
-    ]
+    # ── Inventory alerts (low stock) ──
+    fuel_required = FuelTransactionLog.objects.filter(
+        transaction_status=StockStatusChoices.REQUIRED
+    ).count()
+    ammo_required = AmmoTransactionLog.objects.filter(
+        transaction_status=StockStatusChoices.REQUIRED
+    ).count()
+    pending_orders = fuel_required + ammo_required
 
-    trusts_today = [
-        {
-            "payer": "ABC Travels",
-            "amount": 0,
-            "reference": "TR-2025-1001",
-            "paid": True,
-        },
-        {
-            "payer": "Walk-in Group",
-            "amount": 0,
-            "reference": "TR-2025-1002",
-            "paid": True,
-        },
-    ]
+    # ── Ticket refunds today ──
+    refunds_today = TicketRefund.objects.filter(date=today).order_by('-created_at')[:10]
+    refund_count = TicketRefund.objects.filter(date=today).count()
 
-    complimentary = [
-        {"item": "Welcome Drinks", "qty": 12, "reason": "VIP Guests"},
-        {"item": "Boat Ride", "qty": 2, "reason": "Service Recovery"},
-    ]
-
-    room_bookings = {
-        "night_stay_count": 22,
-        "rooms_occupied": 18,
-        "rooms_available": 12,
-    }
-
-    events_today = [
-        {
-            "guest_name": "Khan Family",
-            "location": "Lakeside Lawn",
-            "event_type": "Birthday",
-            "amount": 65000,
-        },
-        {
-            "guest_name": "BluePeak Corp",
-            "location": "Hall A",
-            "event_type": "Team Meetup",
-            "amount": 120000,
-        },
-    ]
-
-    expense_refunds = [
-        {"type": "Expense", "title": "Decor Vendor", "amount": 7000},
-        {"type": "Refund", "title": "Meal Refund", "amount": 2500},
-    ]
-
-    # ── Live transaction history (last 10 today) ──
+    # ── Recent entry transactions (last 10 today) ──
     recent_transactions = (
         EntryTransaction.objects
         .filter(created_at__date=today)
@@ -102,23 +95,68 @@ def dashboard_view(request: HttpResponse) -> HttpResponse:
         .order_by('-created_at')[:10]
     )
 
-    # Role-based visibility for amounts (CEO, ACCOUNTANT)
-    user_role = getattr(request.user, "role", None)
+    # ── Visit type breakdown ──
+    visit_breakdown = (
+        today_entries.values('visit_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    # Role-based visibility for amounts
+    user_role = getattr(request.user, 'role', None)
     can_view_amounts = user_role in (UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER)
 
+    # ── Overall stats (all time) ──
+    total_guests_all = EntryCounterForm.objects.count()
+    total_pos_all = POS.objects.aggregate(s=Sum('amount'))['s'] or 0
+    total_reservations = Reservation.objects.filter(is_deleted=False).count()
+
     context = {
-        "today": today,
-        "counters": counters,
-        "total_pos_ex_parasailing": total_pos_ex_parasailing,
-        "guest_entry": guest_entry,
-        "avg_spend_per_person": avg_spend_per_person,
-        "expenses": expenses,
-        "trusts_today": trusts_today,
-        "complimentary": complimentary,
-        "room_bookings": room_bookings,
-        "events_today": events_today,
-        "expense_refunds": expense_refunds,
-        "recent_transactions": recent_transactions,
-        "can_view_amounts": can_view_amounts,
+        'today': today,
+
+        # POS
+        'pos_by_counter': pos_by_counter,
+        'total_pos_today': total_pos_today,
+
+        # Guests
+        'total_adults': total_adults,
+        'total_kids': total_kids,
+        'total_guests': total_guests,
+        'new_guests': new_guests,
+        'old_guests': old_guests,
+        'visit_breakdown': visit_breakdown,
+
+        # Revenue
+        'entry_revenue': entry_revenue,
+        'free_billing_total': free_billing_total,
+        'refund_total': refund_total,
+
+        # Free billing
+        'free_bills': free_bills,
+        'free_bill_count': free_bill_count,
+
+        # Rooms
+        'total_rooms': total_rooms,
+        'occupied_count': occupied_count,
+        'reserved_count': reserved_count,
+        'available_count': available_count,
+
+        # Inventory
+        'pending_orders': pending_orders,
+
+        # Refunds
+        'refunds_today': refunds_today,
+        'refund_count': refund_count,
+
+        # Transactions
+        'recent_transactions': recent_transactions,
+
+        # All-time
+        'total_guests_all': total_guests_all,
+        'total_pos_all': total_pos_all,
+        'total_reservations': total_reservations,
+
+        # Permissions
+        'can_view_amounts': can_view_amounts,
     }
-    return render(request, "dashboard/index.html", context)
+    return render(request, 'dashboard/index.html', context)

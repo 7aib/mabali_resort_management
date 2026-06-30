@@ -83,7 +83,7 @@ def inventory_item_delete_view(request, pk):
         item.is_deleted = True
         item.deleted_at = timezone.now()
         item.save(update_fields=['is_deleted', 'deleted_at'])
-        messages.success(request, f'"{item.name}" deleted successfully.')
+        messages.success(request, '"%s" deleted successfully.' % item.name)
         return redirect('inventory:item_list')
     
     return redirect('inventory:item_list')
