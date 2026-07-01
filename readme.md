@@ -1,93 +1,234 @@
 # Mabali Resort Management
 
-Lightweight Django-based resort management dashboard used for demos and internal tools.
+Full-featured Django-based resort management system with role-based access, real-time dashboards, inventory tracking, cash management, room reservations, and more.
 
-## Overview
+## Features
 
-Mabali Resort Management is a Django project that provides a simple admin/dashboard interface, authentication, and inventory modules. The repo includes frontend assets (Bootstrap, ApexCharts) under `static/` and server-side templates under `templates/`.
+### Authentication & Roles
+- Custom User model (`AUTH_USER_MODEL`) with 10 roles: CEO, Accountant, HR Manager, Main Cashier, Cashier, Host, Sale, Customer, Driver, Waiter
+- Role-based access control via `@roles_required` decorator on every view
+- Login / logout with configurable `LOGIN_URL`
+- User profile page
+- Change password with strength meter and show/hide toggle
+- Employee management — create, list, detail, edit, delete
+- Phone number validation (`+92XXXXXXXXXX` format, 13 characters, project-wide)
+- `SoftDeleteModelMixin` — employees are soft-deleted, never hard-deleted
 
-## Quick links
+### Dashboard
+- Role-gated — only CEO, Accountant, HR Manager can access
+- **POS by counter** — daily totals per counter type, exempting Water Sports (parasailing)
+- **Guest entry stats** — total guests, adults, kids, walk-ins, members
+- **Average spending per person** — Cash Counter Revenue / Total Guests
+- **Revenue breakdown** — Cash Counter, Cash Register, Cash Handover
+- **Active reservations** — table showing confirmed and checked-in reservations today
+- **Room bookings** — today's check-ins, check-outs, and night-stay revenue
+- **Trust amounts** — running trust balance
+- **Free/complementary billing** — daily free billing entries
+- **Expense and refund details** — ticket refunds, category-wise expenses
+- **Pending inventory orders** — required and ordered item counts
+- **All-time statistics** — lifetime totals for revenue, guests, transactions
+- **Recent transactions** — latest 10 entries across all counters
+- **Events** — upcoming events count
+- Dark mode toggle (persisted via localStorage, dynamic stylesheet swap)
 
-- Project entry: [manage.py](manage.py)  
-- Settings: [`mabali_resort_management.settings`](mabali_resort_management/settings.py) — see [`AUTH_USER_MODEL`](mabali_resort_management/settings.py)  
-- Authentication app:
-  - User model: [`authentication.models.User`](authentication/models.py)
-  - Login/logout views: [`authentication.views.login_view`](authentication/views.py), [`authentication.views.logout_view`](authentication/views.py)
-  - Login template: [authentication/templates/login.html](authentication/templates/login.html)
-- Dashboard:
-  - View: [`dashboard.views.dashboard_view`](dashboard/views.py)
-  - Template: [dashboard/templates/dashboard/index.html](dashboard/templates/dashboard/index.html)
-- Inventory:
-  - Core model: [`inventory.models.InventoryItem`](inventory/models.py)
-  - Views: [inventory/views.py](inventory/views.py)
-- Base template: [templates/base.html](templates/base.html)
-- Key frontend scripts:
-  - Main: [static/js/main.js](static/js/main.js)
-  - Charts: [static/js/dashboards-analytics.js](static/js/dashboards-analytics.js)
-  - Toasts: [static/js/ui-toasts.js](static/js/ui-toasts.js)
+### Cash Counters
+- **New Guest Entry** — form with AJAX phone lookup, auto-fills returning customer data
+- **Daily Sales** — filterable by date and counter type
+- **Customer Status Check** — lookup returning/old customers by phone
+- **Cash Handover** — Cashier role only, end-of-shift handover with remarks
+- **Cash Register** — Main Cashier role only, daily register reconciliation
+- **Ticket Refund** — refund tracking with auto-calculated totals and reason selection (Weather Cancellation, Restaurant 6% Tax Paid Online, Other)
+- Visit types: Paid, Complementary, Night Stay, Group, Decor Team Events
+- Gate tracking: Main Gate, Event Gate, Lake Side Gate
+- City tracking for guest origin (Islamabad, Rawalpindi, Lahore, Karachi, Peshawar, Quetta, Multan, Faisalabad, Other)
+- Counter types: Main Restaurant LSR, Adventure Area, Reception, Water Sports, Water Sport Tuck Shop, Event Bar, Shooting Range, Tuck Shop (Main), Night Stay, Group/Event, Auction
 
-## Repo structure (high level)
+### Inventory
+- **Inventory Items** — full CRUD with name, category, supplier, stock quantity, unit, notes
+- **Search and filter** — search by name/supplier/notes, filter by asset category
+- **Stock Management** — aggregate stock view across all 11 categories (Jetski, Boat, Speedboat, Parasailing Boat, Vehicle, Equipment, Fuel, Ammo, Generator, Ambulance, Other)
+- **Purchase Orders** — two-section view: Required items and Ordered items with badge counts
+- **Fuel Entry** — vehicle assignment (J1-J11, B1-B5, SP1-SP3, P1-P2, etc.), status transitions, stock deduction on issue
+- **Ammo Entry** — shooting range bullets, payment types (Paid via Cash, Paid via Tickets, Paid via Groups, Free Bullets), free bullet reason tracking
+- **Generator Log** — run hours, fuel used in liters, notes
+- **Ambulance Log** — patient name, patient type (Employee/Guest/Local), hospital selection (Khanpur, Haripur, Taxila, POF, Rawalpindi/Islamabad, Abbottabad, Others), start/end KM readings, driver
+- **Status state machine** — centralized in `inventory/utils.py`:
+  - `required → ordered → purchased` (standard procurement)
+  - `required → issued` (direct issue from stock)
+  - `required/ordered → cancelled`
+  - `issued`, `purchased`, `cancelled` are terminal states
+- **Stock validation** — cannot issue more than available `stock_quantity`; enforced at model `save()` level
+- **Creation status enforcement** — only "Required" or "Issued" allowed as initial status
+- Role-based visibility — Items and Add Item tabs only visible to CEO, Accountant, HR Manager, Main Cashier
+- `InventoryItem` is a reference table — quantities tracked and updated in transaction log `save()` methods
 
-- authentication/ — custom user model, auth views, forms, templates, migrations  
-- dashboard/ — analytics pages and dummy data used for the UI  
-- inventory/ — inventory models and simple views  
-- mabali_resort_management/ — Django project settings, wsgi/asgi, mixins  
-- static/ — compiled frontend assets (JS, CSS, vendor)  
-- templates/ — shared templates and components (navbar, sidenav, footer)
+### Reservations
+- **Room management** — seeded rooms: huts, suites, rooms, honeymoon rooms (21 total)
+- **Reservation create** — form with AJAX phone lookup, auto-creates or reuses Customer user
+- **Reservation edit** — update guest info, dates, room, status, payment details
+- **Reservation list** — all non-deleted reservations with search
+- **Room status view** — live status for every room: available, occupied (today falls within stay), reserved (future check-in)
+- **Overlap validation** — same room cannot be booked for overlapping dates (enforced in model `clean()` AND view-level check as safety net)
+- **Status transitions** — Confirmed → Checked In → Checked Out / Cancelled
+- **Payment tracking** — advance amount, amount received, balance due, discount, payment method (Cash/Credit/IBFT), payment type (Advance/Final), bank (Mabali FBIL)
+- **Customer lookup API** — AJAX endpoint (`/reservations/api/customer-lookup/`) for real-time phone search
+- **Checkout-day availability** — rooms become available on checkout day (`check_in <= today < check_out`)
 
-## Local development
+### Finance
+- **POS Entry** — Point of Sale entry with all 11 counter types and 3 payment methods (Cash, IBFT, Credit Card)
+- Role-restricted to CEO, Accountant, HR Manager, Main Cashier
 
-1. Create & activate virtualenv:
-   ```sh
-   python -m venv .venv
-   source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-   ```
+### Complementary / Free Billing
+- **Free billing form** — bill type (QB Bill, Partial Bill, Without QT, Zoho Bill Full), department (8 departments), head (11 categories), status (Paid, Paid with Discount, Pending, Free, Package Bill)
+- **File upload** for bill documents (`MEDIA_ROOT/bills/`)
+- **Today's entries table** — all free billing entries for the current day
+- Accessible to all logged-in users
 
-2. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
-   ```
+### Error Logging
+- **DatabaseLogHandler** — custom Django logging handler that writes to `ErrorLog` model
+- **ErrorLogMiddleware** — captures request path, method, user, and IP for every exception
+- **`@log_errors` decorator** — applied to every view across all apps; logs exceptions to DB then re-raises for Django's 500 handling
+- **Read-only admin interface** — view all logged errors in Django admin
+- Thread-safe via `threading.local()` for request context
 
-3. Set up environment variables:
-   ```sh
-   cp .env.example .env
-   # Edit .env with your configuration (generate a new SECRET_KEY for production)
-   ```
+### Project Configuration
+- Project name, logo, icon, website URL, and hero image configurable via `mabali_resort_management/constants.py`
+- Available in all templates via context processor
+- Footer, navbar, sidebar, and login page all use config variables
+- Paid visit price configurable (`PAID_VISIT_PRICE = 1500.00`)
 
-4. Set up DB and run server:
-   ```sh
-   python manage.py migrate
-   python manage.py createsuperuser
-   python manage.py runserver
-   ```
+### UI / Templates
+- Gradient header + card-based design pattern across all pages
+- Sticky footer pinned to bottom of page
+- Dark mode toggle in navbar — persists via `localStorage` with dynamic stylesheet swap (`theme-default.css` ↔ `theme-dark.css`)
+- Sidenav with role-based visibility:
+  - Cash Handover → Cashier only
+  - Cash Register → Main Cashier only
+  - Finance, Rooms, Free/Complementary, Inventory → role-gated sections
+- Generic reusable `PhoneLookup` JS module (`static/js/phone-lookup.js`) — configurable debounce, min length, callbacks
+- Double-submit prevention on all forms
+- Success/error message feedback via Django messages framework
 
-5. Open the site at http://127.0.0.1:8000/ . Login uses the auth views in [`authentication/views.py`](authentication/views.py).
+## Tech Stack
 
-## Notes for contributors
+- **Backend:** Django 5.2, Python 3.11+
+- **Frontend:** Bootstrap 5, ApexCharts, Select2
+- **Database:** SQLite (dev), PostgreSQL-ready
+- **Dependencies:** Pillow (image uploads), python-dotenv
 
-- **Security**: Never commit `.env` files or hardcoded secrets. Use environment variables for sensitive configuration (see [.env.example](.env.example)).
-- **Code Quality**: 
-  - All Python files should include docstrings for modules, classes, and functions.
-  - Use type hints on function parameters and return values.
-  - Follow PEP 8 style guidelines.
-  - Imports should be organized at the top of files (not inside functions).
-  - Use Django's `ValidationError` instead of plain Python exceptions for model validation.
-- The project uses a custom user model defined in [`authentication/models.py`](authentication/models.py) and referenced by [`AUTH_USER_MODEL`](mabali_resort_management/settings.py).
-- Dashboard pages render charts using scripts in [static/js/dashboards-analytics.js](static/js/dashboards-analytics.js). If you add new pages that need charts, follow the same pattern.
-- Toast placement and disposal logic lives in [static/js/ui-toasts.js](static/js/ui-toasts.js).
-- Role-based access control uses the `UserRoles` enum in [`authentication/choices.py`](authentication/choices.py). Always use this enum for role comparisons instead of hardcoded strings.
+## Quick Start
 
-## Tests
+```sh
+# 1. Clone and set up virtual environment
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Linux/Mac
 
-No application tests are included beyond the placeholder test modules:
-- [authentication/tests.py](authentication/tests.py)
-- [inventory/tests.py](inventory/tests.py)
+# 2. Install dependencies
+pip install -r requirements.txt
 
-Run Django tests with:
+# 3. Configure environment
+cp .env.example .env
+# Edit .env — set DJANGO_SECRET_KEY for production
+
+# 4. Run migrations and start
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py seed_data   # optional: seed test rooms and data
+python manage.py runserver
+```
+
+Open http://127.0.0.1:8000/
+
+## URL Routes
+
+| Path | App | View |
+|---|---|---|
+| `/` | authentication | Login |
+| `/logout/` | authentication | Logout |
+| `/profile/` | authentication | Profile |
+| `/change-password/` | authentication | Change Password |
+| `/employee_dashboard/` | authentication | Employee List |
+| `/employee_create/` | authentication | Employee Create |
+| `/employee/<pk>/` | authentication | Employee Detail |
+| `/employee/<pk>/edit/` | authentication | Employee Edit |
+| `/employee/<pk>/delete/` | authentication | Employee Delete |
+| `/dashboard` | dashboard | Admin Dashboard |
+| `/cash-counters/new-guest-entry/` | cash_counters | Guest Entry Form |
+| `/cash-counters/daily-sales/` | cash_counters | Daily Sales |
+| `/cash-counters/check-customer/` | cash_counters | Customer Status |
+| `/cash-counters/cash-handover/` | cash_counters | Cash Handover |
+| `/cash-counters/cash-register/` | cash_counters | Cash Register |
+| `/cash-counters/ticket-refund/` | cash_counters | Ticket Refund |
+| `/finance/pos-entry/` | finance | POS Entry |
+| `/inventory/` | inventory | Inventory Dashboard |
+| `/inventory/items/` | inventory | Item List |
+| `/inventory/items/create/` | inventory | Item Create |
+| `/inventory/items/<pk>/edit/` | inventory | Item Edit |
+| `/inventory/items/<pk>/delete/` | inventory | Item Delete |
+| `/inventory/generator-log/` | inventory | Generator Log |
+| `/inventory/ambulance-log/` | inventory | Ambulance Log |
+| `/inventory/fuel-entry/` | inventory | Fuel Entry |
+| `/inventory/ammo-entry/` | inventory | Ammo Entry |
+| `/inventory/purchase-orders/` | inventory | Purchase Orders |
+| `/inventory/stock-management/` | inventory | Stock Management |
+| `/reservations/` | reservations | Reservation List |
+| `/reservations/create/` | reservations | Reservation Create |
+| `/reservations/<pk>/edit/` | reservations | Reservation Edit |
+| `/reservations/room-status/` | reservations | Room Status |
+| `/reservations/api/customer-lookup/` | reservations | Customer Lookup API |
+| `/complementary/free-billing/` | complementary | Free Billing |
+
+## Project Structure
+
+```
+mabali_resort_management/
+├── mabali_resort_management/   # Project settings, URLs, constants, mixins
+├── authentication/             # User model, auth views, employee CRUD
+├── dashboard/                  # Dashboard view, seed data command
+├── inventory/                  # Items, fuel, ammo, generator, ambulance logs
+├── cash_counters/              # Guest entry, sales, cash handover/register, refunds
+├── finance/                    # POS entry
+├── reservations/               # Rooms, reservations, room status
+├── complementary/              # Free/complementary billing
+├── error_logs/                 # Error logging handler, middleware, decorators
+├── templates/                  # Base template, components (navbar, sidenav, footer)
+├── static/                     # JS, CSS, vendor assets, themes
+└── requirements.txt
+```
+
+## Running Tests
+
 ```sh
 python manage.py test
 ```
 
-## License
+Tests cover all 7 apps — 481+ tests total:
+- `authentication/tests.py` — 84 tests (model, phone validation, forms, login/logout, profile, change password, employee CRUD, roles_required, edge cases)
+- `cash_counters/tests.py` — 82 tests (5 models, 6 view endpoints, permission matrix, integration tests)
+- `complementary/tests.py` — 42 tests (FreeBilling model, free_billing_view, all choices, permissions)
+- `finance/tests.py` — 38 tests (POS model, pos_entry_view, role-based access, all counters/payment methods)
+- `inventory/tests.py` — 127 tests (utils state machine, 5 models, status transitions, 11 views, role permissions, purchase orders, stock management)
+- `dashboard/tests.py` — 50 tests (permissions, context keys, POS/guest/revenue/room/trust/inventory/events computations)
+- `reservations/tests.py` — 58 tests (Room/Reservation models, create/edit/list/room_status/customer_lookup views, overlap validation, permissions)
 
-This repo contains sample/demo code. Add a LICENSE file if you intend to publish with an explicit license.
+## Configuration
+
+- **Project name/logo:** Edit `mabali_resort_management/constants.py`
+- **Time zone:** `Asia/Karachi` (set in `settings.py`)
+- **Login URL:** `/` (set in `settings.py`)
+- **Media files:** `MEDIA_ROOT = BASE_DIR / "media"` — bill uploads stored under `media/bills/`
+
+## Notes
+
+- **Role-based access** enforced via `@roles_required` decorator and `UserRoles` enum in `authentication/choices.py`
+- **Inventory status transitions** enforced at model level via `inventory/utils.py` — `STATUS_TRANSITIONS` dict and `validate_status_transition()`
+- **Stock validation** — `FuelTransactionLog.save()` and `AmmoTransactionLog.save()` check available `stock_quantity` before issuing
+- **Room overlap validation** — `Reservation.clean()` uses `check_in_date__lte` / `check_out_date__gte` to catch same-day bookings; views also check directly as a safety net
+- **All views log exceptions** to the database via `@log_errors` decorator
+- **Dark mode** toggled from navbar, persisted via `localStorage`, applied via `html.dark-style` CSS class
+- **Phone numbers** follow `+92XXXXXXXXXX` format (13 characters) project-wide
+- **Timezone** set to `Asia/Karachi` — all `DateField` defaults use `timezone.localdate()` to avoid UTC/local mismatch
+- **LOGIN_URL** set to `/` in `settings.py` (not Django's default `/accounts/login/`)
+- **POS exempts Water Sports** from dashboard totals (parasailing is part of Water Sports)
+- **Test suite** — 481+ tests across 7 apps: authentication (84), cash_counters (82), complementary (42), finance (38), inventory (127), dashboard (50), reservations (58)
