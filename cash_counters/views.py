@@ -17,7 +17,7 @@ User = get_user_model()
 @login_required
 @log_errors
 def daily_sales_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     # Fetch last 20 entries for transaction history shown below the form 
     daily_entries = EntryCounterForm.objects.filter(created_at__date=today).select_related('customer').prefetch_related('transaction').order_by('-created_at')[:20]
@@ -113,7 +113,7 @@ def check_customer_status(request):
 @roles_required(UserRoles.CASHIER)
 @log_errors
 def cash_handover_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     
     # Get cashiers and main cashiers for the dropdowns
     cashiers = User.objects.filter(
@@ -176,7 +176,7 @@ def cash_handover_view(request):
 @roles_required(UserRoles.MAIN_CASHIER)
 @log_errors
 def cash_register_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     
     # Get cashiers for the dropdowns
     cashiers = User.objects.filter(
@@ -232,7 +232,7 @@ def cash_register_view(request):
 @login_required
 @log_errors
 def ticket_refund_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     if request.method == 'POST':
         date = request.POST.get('date')
