@@ -12,6 +12,7 @@ from cash_counters.models import EntryCounterForm, EntryTransaction, CashRegiste
 from finance.models import POS
 from complementary.models import FreeBilling
 from cash_counters.models import TicketRefund
+from mabali_resort_management.decorators import roles_required
 from reservations.models import Room, Reservation
 from reservations.choices import ReservationStatusChoices
 from inventory.models import FuelTransactionLog, AmmoTransactionLog
@@ -24,6 +25,7 @@ EXEMPT_FROM_POS = ['Water Sports']
 
 @login_required
 @log_errors
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER,)
 def dashboard_view(request: HttpResponse) -> HttpResponse:
     """Display the main dashboard with financial and operational metrics."""
     today = timezone.localdate()

@@ -13,7 +13,7 @@ from error_logs.decorators import log_errors
 @roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER, UserRoles.MAIN_CASHIER)
 @log_errors
 def pos_entry_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     
     if request.method == 'POST':
         date = request.POST.get('date')
