@@ -150,7 +150,7 @@ def inventory_item_edit_view(request, pk):
 @login_required
 @log_errors
 def generator_log_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     
     # Get generators from inventory items
     generators = InventoryItem.objects.filter(
@@ -200,7 +200,7 @@ def generator_log_view(request):
 @login_required
 @log_errors
 def ambulance_log_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     
     # Get ambulances from inventory items
     ambulances = InventoryItem.objects.filter(
@@ -271,7 +271,7 @@ def ambulance_log_view(request):
 @login_required
 @log_errors
 def fuel_entry_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
     
     fuel_items = InventoryItem.objects.filter(
         category='fuel',
@@ -353,7 +353,7 @@ def fuel_entry_view(request):
 @login_required
 @log_errors
 def ammo_entry_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     ammo_items = InventoryItem.objects.filter(
         category='ammo',
