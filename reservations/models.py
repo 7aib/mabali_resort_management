@@ -86,7 +86,7 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     # Meta
     remarks = models.TextField(blank=True, default='')
     created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name='created_reservations'
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_reservations'
     )
 
     class Meta:

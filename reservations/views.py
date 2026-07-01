@@ -146,7 +146,7 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
         'payment_types': PaymentTypeChoices.choices,
         'banks': BankChoices.choices,
         'statuses': ReservationStatusChoices.choices,
-        'today': timezone.now().date(),
+        'today': timezone.localdate(),
     }
     return render(request, 'reservations/reservation_create.html', context)
 
@@ -272,7 +272,7 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
         'payment_types': PaymentTypeChoices.choices,
         'banks': BankChoices.choices,
         'statuses': ReservationStatusChoices.choices,
-        'today': timezone.now().date(),
+        'today': timezone.localdate(),
     }
     return render(request, 'reservations/reservation_edit.html', context)
 
@@ -301,7 +301,7 @@ def customer_lookup_api(request: HttpRequest) -> HttpResponse:
 @log_errors
 def room_status_view(request: HttpRequest) -> HttpResponse:
     """Show live status of every room."""
-    today = timezone.now().date()
+    today = timezone.localdate()
     rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by('name')
 
     # Collect all active (non-cancelled, non-checked_out) reservations in one query
