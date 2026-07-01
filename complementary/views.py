@@ -10,7 +10,7 @@ from error_logs.decorators import log_errors
 @login_required
 @log_errors
 def free_billing_view(request):
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     if request.method == 'POST':
         date = request.POST.get('date')
