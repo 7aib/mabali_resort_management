@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Create Employee {% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Back Button -->
+  <div class="col-12">
+    <a href="{% url 'employee_dashboard' %}" class="btn btn-outline-secondary">
+      <i class="bx bx-arrow-back me-2"></i>Back to Employee Dashboard
+    </a>
+  </div>
+
+  <!-- Create Form -->
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="m-0">Create Employee</h5>
+          <span class="badge bg-label-warning">Admin Only</span>
+        </div>
+      </div>
+      <div class="card-body">
+
+
+        <form method="post" class="needs-validation">
+          {% csrf_token %}
+          
+          {% comment %} <div class="alert alert-info mb-3">
+            <i class="bx bx-info-circle me-2"></i>
+            <strong>Current Employee:</strong> {{ employee.get_full_name|default:employee.username }} (@{{ employee.username }})
+          </div> {% endcomment %}
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              {% include 'components/forms/input.html' with id="first_name" label="First Name" value=employee.first_name placeholder="Enter first name" %}
+            </div>
+            <div class="col-md-6">
+              {% include 'components/forms/input.html' with id="last_name" label="Last Name" value=employee.last_name placeholder="Enter last name" %}
+            </div>
+          </div>
+
+            <div class="row mb-3">
+            <div class="col-md-6">
+              {% include 'components/forms/input.html' with id="username" label="Username" value=employee.username placeholder="Enter username" %}
+            </div>
+            <div class="col-md-6">
+              {% include 'components/forms/input.html' with id="password" label="Password" type="password" value=employee.password placeholder="Enter password" %}
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              {% include 'components/forms/input.html' with type="email" id="email" label="Email Address" value=employee.email placeholder="Enter email address" %}
+            </div>
+            <div class="col-md-6">
+              {% include 'components/forms/input.html' with type="tel" id="phone_number" label="Phone Number" value=employee.phone_number|default:'+92' placeholder="+9230112345678" pattern="^\+92[0-9]{10}$" minlength="13" maxlength="13" title="Format: +92XXXXXXXXXX (e.g. +9230112345678)" help_text="Format: +92XXXXXXXXXX (13 characters)" error_id="phone_error" error_msg="Please enter a valid phone number in +92XXXXXXXXXX format" %}
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              {% include 'components/forms/select.html' with id="role" label="Role" options=roles current_value=employee.role required=True %}
+            </div>
+          </div>
+
+          <hr>
+          
+          <div class="row">
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-save me-2"></i>Save Changes
+              </button>
+              <a href="{% url 'employee_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+  }
+  .avatar-xl {
+    width: 5rem;
+    height: 5rem;
+  }
+  .bg-label-primary {
+    background-color: rgba(105, 108, 255, 0.1);
+    color: #696cff;
+  }
+  .bg-label-info {
+    background-color: rgba(10, 184, 255, 0.1);
+    color: #0ab8ff;
+  }
+  .bg-label-warning {
+    background-color: rgba(251, 146, 60, 0.1);
+    color: #f97316;
+  }
+</style>
+
+<script>
+  // Phone number validation
+  document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone_number');
+    const phoneError = document.getElementById('phone_error');
+    const form = document.querySelector('form');
+    
+    if (!phoneInput) return;
+    
+    // Real-time validation feedback
+    phoneInput.addEventListener('input', function() {
+      validatePhoneNumber();
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+      if (phoneInput.value.trim() && !validatePhoneNumber()) {
+        e.preventDefault();
+        phoneInput.focus();
+        return false;
+      }
+    });
+    
+    function validatePhoneNumber() {
+      const value = phoneInput.value.trim();
+      
+      // If empty, it's optional so valid
+      if (!value) {
+        phoneInput.classList.remove('is-invalid');
+        phoneError.style.display = 'none';
+        return true;
+      }
+      
+      // Pattern: allows +, digits, spaces, dashes, parentheses
+      // Length: 7-15 characters (excluding special chars won't count towards limit)
+      const pattern = /^\+?[0-9\s\-\(\)]{7,15}$/;
+      const digitCount = value.replace(/\D/g, '').length;
+      
+      if (pattern.test(value) && digitCount >= 7 && digitCount <= 15) {
+        phoneInput.classList.remove('is-invalid');
+        phoneError.style.display = 'none';
+        return true;
+      } else {
+        phoneInput.classList.add('is-invalid');
+        phoneError.style.display = 'block';
+        return false;
+      }
+    }
+  });
+</script>
+{% endblock %}

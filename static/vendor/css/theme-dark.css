@@ -1,0 +1,396 @@
+/*
+ * Dark Theme for Sneat Template
+ * Mabali Resort Management
+ */
+
+/* ── Global ── */
+html.dark-style {
+  --body-bg: #1e1e2d;
+  --body-color: #a1acb8;
+  --card-bg: #2b2b3d;
+  --card-color: #a1acb8;
+  --border-color: #3a3b55;
+  --heading-color: #e1e2e8;
+  --table-bg: #2b2b3d;
+  --table-color: #a1acb8;
+  --table-border-color: #3a3b55;
+  --input-bg: #2b2b3d;
+  --input-border-color: #3a3b55;
+  --input-color: #e1e2e8;
+  --navbar-bg: #2b2b3d;
+  --menu-bg: #1e1e2d;
+  --menu-color: #a1acb8;
+  --menu-active-bg: rgba(105,108,255,.15);
+  --menu-active-color: #696cff;
+  --text-muted: #7d8899;
+  --dropdown-bg: #2b2b3d;
+  --dropdown-hover-bg: #3a3b55;
+}
+
+/* ── Body ── */
+html.dark-style body {
+  background-color: var(--body-bg);
+  color: var(--body-color);
+}
+
+/* ── Cards ── */
+html.dark-style .card,
+html.dark-style .card-body {
+  background-color: var(--card-bg);
+  color: var(--card-color);
+  border-color: var(--border-color);
+}
+
+html.dark-style .card-header {
+  background-color: var(--card-bg);
+  border-bottom-color: var(--border-color);
+  color: var(--heading-color);
+}
+
+/* ── Text colors ── */
+html.dark-style h1, html.dark-style h2, html.dark-style h3,
+html.dark-style h4, html.dark-style h5, html.dark-style h6,
+html.dark-style .card-title, html.dark-style .m-0 {
+  color: var(--heading-color);
+}
+
+html.dark-style .text-muted {
+  color: var(--text-muted) !important;
+}
+
+html.dark-style .text-dark {
+  color: #e1e2e8 !important;
+}
+
+/* ── Tables ── */
+html.dark-style .table {
+  color: var(--table-color);
+}
+
+html.dark-style .table > :not(caption) > * > * {
+  background-color: var(--table-bg);
+  color: var(--table-color);
+  border-bottom-color: var(--table-border-color);
+}
+
+html.dark-style .table-light,
+html.dark-style .table thead.table-light th {
+  background-color: #2b2b3d !important;
+  color: #a1acb8 !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+html.dark-style .table-hover > tbody > tr:hover > * {
+  background-color: rgba(105, 108, 255, 0.08);
+  color: var(--table-color);
+}
+
+/* ── Forms ── */
+html.dark-style .form-control,
+html.dark-style .form-select {
+  background-color: var(--input-bg);
+  border-color: var(--input-border-color);
+  color: var(--input-color);
+}
+
+html.dark-style .form-control:focus,
+html.dark-style .form-select:focus {
+  background-color: var(--input-bg);
+  color: var(--input-color);
+  border-color: #696cff;
+  box-shadow: 0 0 0 .2rem rgba(105, 108, 255, .25);
+}
+
+html.dark-style .form-control::placeholder {
+  color: #6d788d;
+}
+
+html.dark-style .form-label,
+html.dark-style label {
+  color: #c1c7d0;
+}
+
+html.dark-style .form-check-input {
+  background-color: var(--input-bg);
+  border-color: var(--input-border-color);
+}
+
+html.dark-style .form-check-input:checked {
+  background-color: #696cff;
+  border-color: #696cff;
+}
+
+html.dark-style .form-check-label {
+  color: var(--card-color);
+}
+
+/* ── Navbar ── */
+html.dark-style .navbar {
+  background-color: var(--navbar-bg) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+html.dark-style .layout-navbar .navbar-nav .nav-link {
+  color: #a1acb8;
+}
+
+html.dark-style .bg-navbar-theme {
+  background-color: var(--navbar-bg) !important;
+}
+
+/* ── Menu / Sidebar ── */
+html.dark-style .menu {
+  background-color: var(--menu-bg) !important;
+}
+
+html.dark-style .menu .menu-item .menu-link {
+  color: var(--menu-color);
+}
+
+html.dark-style .menu .menu-item.active > .menu-link {
+  background-color: var(--menu-active-bg);
+  color: var(--menu-active-color);
+}
+
+html.dark-style .menu .menu-item.open > .menu-link {
+  color: #e1e2e8;
+}
+
+html.dark-style .menu-header {
+  color: #6d788d;
+}
+
+html.dark-style .menu-inner-shadow {
+  background: linear-gradient(to bottom, var(--menu-bg), transparent);
+}
+
+/* ── Dropdowns ── */
+html.dark-style .dropdown-menu {
+  background-color: var(--dropdown-bg);
+  border-color: var(--border-color);
+}
+
+html.dark-style .dropdown-item {
+  color: #a1acb8;
+}
+
+html.dark-style .dropdown-item:hover,
+html.dark-style .dropdown-item:focus {
+  background-color: var(--dropdown-hover-bg);
+  color: #e1e2e8;
+}
+
+html.dark-style .dropdown-divider {
+  border-color: var(--border-color);
+}
+
+/* ── Badges ── */
+html.dark-style .bg-label-primary {
+  background-color: rgba(105, 108, 255, .18) !important;
+  color: #696cff !important;
+}
+
+html.dark-style .bg-label-success {
+  background-color: rgba(113, 221, 55, .18) !important;
+  color: #71dd37 !important;
+}
+
+html.dark-style .bg-label-danger {
+  background-color: rgba(255, 62, 29, .18) !important;
+  color: #ff3e1d !important;
+}
+
+html.dark-style .bg-label-warning {
+  background-color: rgba(255, 171, 0, .18) !important;
+  color: #ffab00 !important;
+}
+
+html.dark-style .bg-label-info {
+  background-color: rgba(3, 195, 236, .18) !important;
+  color: #03c3ec !important;
+}
+
+html.dark-style .bg-label-secondary {
+  background-color: rgba(133, 146, 163, .18) !important;
+  color: #8592a3 !important;
+}
+
+/* ── Alert ── */
+html.dark-style .alert-info {
+  background-color: rgba(3, 195, 236, .15);
+  border-color: rgba(3, 195, 236, .25);
+  color: #03c3ec;
+}
+
+html.dark-style .alert-success {
+  background-color: rgba(113, 221, 55, .15);
+  border-color: rgba(113, 221, 55, .25);
+  color: #71dd37;
+}
+
+html.dark-style .alert-danger {
+  background-color: rgba(255, 62, 29, .15);
+  border-color: rgba(255, 62, 29, .25);
+  color: #ff3e1d;
+}
+
+html.dark-style .alert-warning {
+  background-color: rgba(255, 171, 0, .15);
+  border-color: rgba(255, 171, 0, .25);
+  color: #ffab00;
+}
+
+/* ── Buttons ── */
+html.dark-style .btn-outline-primary {
+  color: #696cff;
+  border-color: #696cff;
+}
+
+html.dark-style .btn-outline-primary:hover {
+  background-color: #696cff;
+  color: #fff;
+}
+
+html.dark-style .btn-outline-secondary {
+  color: #a1acb8;
+  border-color: #3a3b55;
+}
+
+html.dark-style .btn-outline-secondary:hover {
+  background-color: #3a3b55;
+  color: #e1e2e8;
+}
+
+/* ── Breadcrumbs ── */
+html.dark-style .breadcrumb {
+  background-color: transparent;
+}
+
+html.dark-style .breadcrumb-item a {
+  color: #696cff;
+}
+
+html.dark-style .breadcrumb-item.active {
+  color: #6d788d;
+}
+
+/* ── List group ── */
+html.dark-style .list-group-item {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--card-color);
+}
+
+/* ── Modals ── */
+html.dark-style .modal-content {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* ── Page header gradient ── */
+html.dark-style .page-header {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .3);
+}
+
+/* ── Stat cards ── */
+html.dark-style .stat-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+html.dark-style .section-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* ── Form card ── */
+html.dark-style .form-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+html.dark-style .history-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* ── List card ── */
+html.dark-style .list-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* ── Toasts ── */
+html.dark-style .toast {
+  background-color: var(--card-bg);
+  color: var(--card-color);
+  border-color: var(--border-color);
+}
+
+/* ── Pagination ── */
+html.dark-style .page-link {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: #a1acb8;
+}
+
+html.dark-style .page-item.active .page-link {
+  background-color: #696cff;
+  border-color: #696cff;
+  color: #fff;
+}
+
+/* ── Spinner ── */
+html.dark-style .spinner-border {
+  border-color: #3a3b55;
+  border-top-color: #696cff;
+}
+
+/* ── Utility: bg-light ── */
+html.dark-style .bg-light {
+  background-color: #2b2b3d !important;
+}
+
+html.dark-style .bg-white {
+  background-color: #2b2b3d !important;
+}
+
+/* ── Horizontal cards ── */
+html.dark-style .card {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .2);
+}
+
+/* ── Fix for specific dashboard elements ── */
+html.dark-style .list-group-item.d-flex {
+  background-color: var(--card-bg);
+}
+
+/* ── Overlay ── */
+html.dark-style .layout-overlay {
+  background-color: rgba(0, 0, 0, .5);
+}
+
+/* ── Scrollbar ── */
+html.dark-style ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.dark-style ::-webkit-scrollbar-track {
+  background: #1e1e2d;
+}
+
+html.dark-style ::-webkit-scrollbar-thumb {
+  background: #3a3b55;
+  border-radius: 4px;
+}
+
+html.dark-style ::-webkit-scrollbar-thumb:hover {
+  background: #4a4b65;
+}
+
+/* ── Buy now button ── */
+html.dark-style .btn-buy-now {
+  background-color: #696cff;
+  border-color: #696cff;
+}

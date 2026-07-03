@@ -1,0 +1,24 @@
+<div class="mb-3">
+  <label for="{{ id }}" class="form-label">{{ label }}</label>
+  <input 
+    type="{{ type|default:'text' }}" 
+    class="form-control" 
+    id="{{ id }}" 
+    name="{{ name|default:id }}" 
+    value="{{ value|default:'' }}" 
+    placeholder="{{ placeholder|default:'' }}"
+    {% if pattern %}pattern="{{ pattern }}"{% endif %}
+    {% if minlength %}minlength="{{ minlength }}"{% endif %}
+    {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+    {% if title %}title="{{ title }}"{% endif %}
+    {% if required %}required{% endif %}
+  >
+  {% if help_text %}
+  <small class="form-text text-muted">{{ help_text }}</small>
+  {% endif %}
+  {% if error_id %}
+  <div class="invalid-feedback d-block" id="{{ error_id }}" style="display:none;">
+    {{ error_msg }}
+  </div>
+  {% endif %}
+</div>

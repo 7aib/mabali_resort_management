@@ -1,0 +1,47 @@
+{% with badge_id=badge_id|default:"statusBadge" %}
+{% with idle_text=idle_text|default:"Enter phone to detect status" %}
+
+<style>
+  #{{ badge_id }},
+  .status-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: .82rem;
+    transition: background .3s ease, color .3s ease;
+  }
+  #{{ badge_id }}.new-customer,
+  .status-badge-pill.new-customer { background: #e8f5e9; color: #2e7d32; }
+  #{{ badge_id }}.old-customer,
+  .status-badge-pill.old-customer { background: #fff3e0; color: #e65100; }
+  #{{ badge_id }}.unknown,
+  .status-badge-pill.unknown      { background: #f0f0f6; color: #8e8ea8; }
+
+  .dark-style #{{ badge_id }}.new-customer,
+  .dark-style .status-badge-pill.new-customer { background: #1b3a20; color: #66bb6a; }
+  .dark-style #{{ badge_id }}.old-customer,
+  .dark-style .status-badge-pill.old-customer { background: #3a2a10; color: #ffa726; }
+  .dark-style #{{ badge_id }}.unknown,
+  .dark-style .status-badge-pill.unknown      { background: #3a3b55; color: #8e8ea8; }
+</style>
+
+{% if status == "New" %}
+  <span id="{{ badge_id }}" class="status-badge-pill new-customer">
+    <i class="bx bx-star"></i> New Customer
+  </span>
+{% elif status == "Old" %}
+  <span id="{{ badge_id }}" class="status-badge-pill old-customer">
+    <i class="bx bx-check-circle"></i> Old Customer
+  </span>
+{% else %}
+  {# Unknown / idle — JS will update the class and inner HTML dynamically #}
+  <span id="{{ badge_id }}" class="status-badge-pill unknown">
+    <i class="bx bx-loader-circle"></i> {{ idle_text }}
+  </span>
+{% endif %}
+
+{% endwith %}
+{% endwith %}

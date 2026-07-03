@@ -1,72 +1,176 @@
+"""Inventory management models."""
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from authentication.models import User
-from .choices import AmmoCaliberChoices, AssetCategoryChoices, GeneratorCapacityChoices, HospitalChoices, StockStatusChoices, FuelTypeChoices
+from .choices import AssetCategoryChoices, HospitalChoices, PatientTypeChoices, StockStatusChoices, AmmoPaymentChoices
+from .utils import validate_status_transition
 from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteModelMixin
 
 
 class InventoryItem(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Base inventory item model - reference table for assets and supplies."""
 
     name = models.CharField(max_length=120)  # e.g. "Petrol", "9mm Ammo", "100kv Generator"
     category = models.CharField(max_length=20, choices=AssetCategoryChoices.choices)
-    status = models.CharField(max_length=20, choices=StockStatusChoices.choices, default=StockStatusChoices.REQUIRED)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    unit = models.CharField(max_length=30, default='unit')  # e.g. liters, pieces, kms
-    ordered_at = models.DateTimeField(null=True, blank=True)
-    purchased_at = models.DateTimeField(null=True, blank=True)
+    stock_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    unit = models.CharField(max_length=20, blank=True)  # e.g. "liters", "rounds", "units"
     supplier = models.CharField(max_length=150, blank=True)
     notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-created_at']
 
-    def __str__(self):
-        return f"{self.name} ({self.issued_to_asset.category}) - {self.quantity} {self.unit}"
+    def __str__(self) -> str:
+        return self.name
 
 
 class FuelTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log fuel transactions (purchases, issuances)."""
 
+    date = models.DateField(default=timezone.localdate)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_fuel_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='fuel_txns')
-    fuel_type = models.CharField(max_length=10, choices=FuelTypeChoices.choices)
+    transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices)
     quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    unit = models.CharField(max_length=10, default='liters')
-    transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices, default=StockStatusChoices.REQUIRED)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    issued_to = models.ForeignKey(
+        InventoryItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='fuel_received_logs'
+    )
     notes = models.TextField(blank=True)
 
-    def __str__(self):
-        return f"{self.fuel_type} {self.quantity} {self.unit} -> {self.issued_to or 'stock'}"
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Fuel Transactions'
+
+    def save(self, *args, **kwargs):
+        from decimal import Decimal
+        old_status = None
+        if self.pk:
+            try:
+                old_status = FuelTransactionLog.objects.get(pk=self.pk).transaction_status
+            except FuelTransactionLog.DoesNotExist:
+                pass
+        else:
+            self._validate_creation_status()
+
+        if old_status and old_status != self.transaction_status:
+            validate_status_transition(old_status, self.transaction_status)
+
+        if self.transaction_status == StockStatusChoices.ISSUED and self.inventory_item:
+            qty = Decimal(str(self.quantity))
+            if self.inventory_item.stock_quantity < qty:
+                raise ValidationError(
+                    'Insufficient stock. Available: %s, Requested: %s' % (self.inventory_item.stock_quantity, qty)
+                )
+
+        super().save(*args, **kwargs)
+
+        if self.inventory_item and old_status != self.transaction_status:
+            qty = Decimal(str(self.quantity))
+            item = self.inventory_item
+            if self.transaction_status == StockStatusChoices.PURCHASED:
+                item.stock_quantity += qty
+                item.save(update_fields=['stock_quantity'])
+            elif self.transaction_status == StockStatusChoices.ISSUED:
+                item.stock_quantity -= qty
+                item.save(update_fields=['stock_quantity'])
+
+    def _validate_creation_status(self):
+        from .utils import get_creation_statuses
+        if self.transaction_status not in get_creation_statuses():
+            raise ValidationError(
+                'Initial status must be one of: %s' % ', '.join(s.label for s in get_creation_statuses())
+            )
+
+    def __str__(self) -> str:
+        return f"{self.transaction_status} - {self.quantity}L on {self.date}"
 
 
 class AmmoTransactionLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log ammunition transactions (received, fired)."""
 
+    date = models.DateField(default=timezone.localdate)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_ammo_logs')
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ammo_txns')
-    caliber = models.CharField(max_length=10, choices=AmmoCaliberChoices.choices)
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    notes = models.TextField(blank=True)
+    transaction_status = models.CharField(max_length=20, choices=StockStatusChoices.choices)
+    bullet_quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    payment = models.CharField(max_length=20, choices=AmmoPaymentChoices.choices, blank=True)
+    free_bullet_reason = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return f"{self.caliber} x{self.quantity} -> {self.issued_to or 'stock'}"
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Ammo Transactions'
+
+    def save(self, *args, **kwargs):
+        old_status = None
+        if self.pk:
+            try:
+                old_status = AmmoTransactionLog.objects.get(pk=self.pk).transaction_status
+            except AmmoTransactionLog.DoesNotExist:
+                pass
+        else:
+            self._validate_creation_status()
+
+        if old_status and old_status != self.transaction_status:
+            validate_status_transition(old_status, self.transaction_status)
+
+        if self.transaction_status == StockStatusChoices.ISSUED and self.inventory_item:
+            qty = int(self.bullet_quantity)
+            if self.inventory_item.stock_quantity < qty:
+                raise ValidationError(
+                    'Insufficient stock. Available: %s, Requested: %s' % (self.inventory_item.stock_quantity, qty)
+                )
+
+        super().save(*args, **kwargs)
+
+        if self.inventory_item and old_status != self.transaction_status:
+            from decimal import Decimal
+            item = self.inventory_item
+            qty = int(self.bullet_quantity)
+            if self.transaction_status == StockStatusChoices.PURCHASED:
+                item.stock_quantity += qty
+                item.save(update_fields=['stock_quantity'])
+            elif self.transaction_status == StockStatusChoices.ISSUED:
+                item.stock_quantity -= qty
+                item.save(update_fields=['stock_quantity'])
+
+    def _validate_creation_status(self):
+        from .utils import get_creation_statuses
+        if self.transaction_status not in get_creation_statuses():
+            raise ValidationError(
+                'Initial status must be one of: %s' % ', '.join(s.label for s in get_creation_statuses())
+            )
+
+    def __str__(self) -> str:
+        return f"{self.transaction_status} - {self.bullet_quantity} rounds on {self.date}"
 
 
 class GeneratorLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log generator usage and fuel consumption."""
 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_generator_log')
     generator = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='generator_logs')
-    capacity = models.CharField(max_length=10, choices=GeneratorCapacityChoices.choices)
     run_hours = models.DecimalField(max_digits=8, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     fuel_used_liters = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
 
-    def __str__(self):
-        return f"{self.generator.code} {self.capacity} @ {self.log_time.date()}"
+    def __str__(self) -> str:
+        return f"{self.generator.name} @ {self.created_at.date()}"
 
 
 class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
+    """Log ambulance trips including distance and medical expenses."""
 
+    date = models.DateField(default=timezone.localdate)
+    patient_name = models.CharField(max_length=150, default='')
+    patient_type = models.CharField(max_length=20, choices=PatientTypeChoices.choices, default=PatientTypeChoices.LOCAL)
     ambulance = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='ambulance_logs')
     start_reading_km = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     end_reading_km = models.PositiveIntegerField(validators=[MinValueValidator(0)])
@@ -75,15 +179,22 @@ class AmbulanceLog(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     driver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ambulance_drives')
     notes = models.TextField(blank=True)
 
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name_plural = 'Ambulance Logs'
+
     @property
     def kms_travelled(self):
         return max(0, self.end_reading_km - self.start_reading_km)
 
     def save(self, *args, **kwargs):
+        """Validate ambulance log readings before saving."""
+        from django.core.exceptions import ValidationError
         # ensure sensible readings
         if self.end_reading_km is not None and self.start_reading_km is not None and self.end_reading_km < self.start_reading_km:
-            raise ValueError("end_reading_km must be >= start_reading_km")
+            raise ValidationError("end_reading_km must be >= start_reading_km")
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.ambulance.code} {self.created_at} kms: {self.kms_travelled}"
+    def __str__(self) -> str:
+        """Return string representation of ambulance log."""
+        return f"{self.patient_name} - {self.hospital} on {self.date}"

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Cash Handover — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .form-card,
+  .history-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .form-card .card-header,
+  .history-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .form-card .card-header,
+  .dark-style .history-card .card-header { border-bottom-color: #3a3b55; }
+  .history-card { margin-top: 28px; }
+
+  .submit-btn { min-width: 160px; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-transfer me-2"></i> Cash Handover</h4>
+    <p>Submit cash from counter to main cashier</p>
+  </div>
+  <div class="text-end d-none d-md-block">
+    <div style="font-size:2rem; opacity:.6;">💰</div>
+    <small>{{ PROJECT_NAME }}</small>
+  </div>
+</div>
+
+<!-- Handover Form Card -->
+<div class="card form-card">
+  <div class="card-header d-flex align-items-center gap-2">
+    <i class="bx bx-money text-primary"></i> New Cash Handover
+  </div>
+  <div class="card-body">
+    <form method="post" id="handoverForm" action="{% url 'cash_counters:cash_handover' %}">
+      {% csrf_token %}
+
+      <div class="row g-3">
+
+        <!-- Date -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/input.html" with id="id_date" name="date" label="Date *" type="date" value=today|date:"Y-m-d" required=True %}
+        </div>
+
+        <!-- Counter Type -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/select.html" with id="id_counter_type" name="counter_type" label="Counter Type *" options=counter_types %}
+        </div>
+
+        <!-- Cashier on Duty -->
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="id_cashier">Today on Duty Cashier *</label>
+          <select class="form-select" id="id_cashier" name="cashier" required>
+            <option value="">Select Cashier</option>
+            {% for cashier in cashiers %}
+            <option value="{{ cashier.id }}">{{ cashier.get_full_name|default:cashier.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Cash Amount -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/input.html" with id="id_cash_amount" name="cash_amount" label="Cash Amount (Rs.) *" type="number" step="0.01" min="0" placeholder="0.00" required=True %}
+        </div>
+
+        <!-- Handover To (Main Cashier) -->
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="id_handover_to">Handover To (Main Cashier) *</label>
+          <select class="form-select" id="id_handover_to" name="handover_to" required>
+            <option value="">Select Main Cashier</option>
+            {% for mc in main_cashiers %}
+            <option value="{{ mc.id }}">{{ mc.get_full_name|default:mc.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Notes -->
+        <div class="col-12 col-md-4">
+          {% include "components/forms/input.html" with id="id_notes" name="notes" label="Notes (Optional)" type="text" placeholder="Any additional notes" %}
+        </div>
+
+      </div>
+
+      <div class="mt-4 d-flex justify-content-end gap-2">
+        <button type="reset" class="btn btn-outline-secondary">
+          <i class="bx bx-reset me-1"></i> Reset
+        </button>
+        <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+          <i class="bx bx-check-circle me-1"></i> Submit Handover
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Today's Handovers History -->
+<div class="card history-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-history me-2 text-primary"></i>Today's Handovers</span>
+    <span class="badge bg-label-primary">{{ today_handovers|length }} entries</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Time</th>
+            <th>Counter</th>
+            <th>Cashier</th>
+            <th>Handover To</th>
+            <th class="text-end">Amount</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in today_handovers %}
+          <tr>
+            <td><small class="text-muted">{{ h.created_at|time:"H:i" }}</small></td>
+            <td><span class="badge bg-label-primary">{{ h.counter_type }}</span></td>
+            <td class="fw-semibold">{{ h.cashier.get_full_name|default:h.cashier.username }}</td>
+            <td>{{ h.handover_to.get_full_name|default:h.handover_to.username }}</td>
+            <td class="text-end fw-bold">Rs. {{ h.cash_amount|floatformat:0 }}</td>
+            <td><small class="text-muted">{{ h.notes|default:"—" }}</small></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No handovers recorded today.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  /* Prevent double-submit */
+  document.getElementById('handoverForm').addEventListener('submit', function () {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+  });
+})();
+</script>
+{% endblock %}
