@@ -10,6 +10,7 @@ from .models import EntryCounterForm, EntryTransaction, CashHandover, CashRegist
 from .constants import CitiesChoices, PaymentMethodChoices, VisitTypeChoices, GateChoices, StatusChoices, CounterTypeChoices, TicketRefundReasonChoices
 from mabali_resort_management.constants import PAID_VISIT_PRICE
 from mabali_resort_management.decorators import roles_required
+from mabali_resort_management.pagination import paginate_queryset
 from error_logs.decorators import log_errors
 
 User = get_user_model()
@@ -19,16 +20,11 @@ User = get_user_model()
 def daily_sales_view(request):
     today = timezone.localdate()
 
-    # Fetch last 20 entries for transaction history shown below the form 
-    daily_entries = EntryCounterForm.objects.filter(created_at__date=today).select_related('customer').prefetch_related('transaction').order_by('-created_at')[:20]
-    
-    # Calculate total sales for the day
-    # total_sales = sum(entry.transaction.amount for entry in daily_entries if hasattr(entry, 'transaction'))
-    
-    context = {
-        'daily_entries': daily_entries,
-        # 'total_sales': total_sales,
-    }
+    daily_entries = EntryCounterForm.objects.filter(
+        created_at__date=today
+    ).select_related('customer').prefetch_related('transaction').order_by('-created_at')
+
+    context = paginate_queryset(request, daily_entries, per_page=20)
     return render(request, 'cash_counters/daily_sales.html', context)
 
 
@@ -110,7 +106,7 @@ def check_customer_status(request):
 
 
 @login_required
-@roles_required(UserRoles.CASHIER)
+@roles_required(UserRoles.CASHIER, UserRoles.CEO )
 @log_errors
 def cash_handover_view(request):
     today = timezone.localdate()
@@ -173,7 +169,7 @@ def cash_handover_view(request):
 
 
 @login_required
-@roles_required(UserRoles.MAIN_CASHIER)
+@roles_required(UserRoles.MAIN_CASHIER, UserRoles.CEO)
 @log_errors
 def cash_register_view(request):
     today = timezone.localdate()

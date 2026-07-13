@@ -375,7 +375,7 @@ class DailySalesViewTest(TestCase):
             status=StatusChoices.NEW,
         )
         response = self.client.get(reverse('cash_counters:daily_sales'))
-        self.assertIn(entry, response.context['daily_entries'])
+        self.assertIn(entry, response.context['items'])
 
     def test_excludes_other_days_entries(self):
         self.client.login(username='user1', password='pass123')
@@ -394,7 +394,7 @@ class DailySalesViewTest(TestCase):
         old_date = timezone.now() - timedelta(days=5)
         EntryCounterForm.objects.filter(pk=entry.pk).update(created_at=old_date)
         response = self.client.get(reverse('cash_counters:daily_sales'))
-        self.assertNotIn(entry, response.context['daily_entries'])
+        self.assertNotIn(entry, response.context['items'])
 
 
 class EntryFormViewTest(TestCase):
