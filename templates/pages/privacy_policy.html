@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .policy-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+
+  .policy-section { margin-bottom: 2rem; }
+  .policy-section h5 {
+    font-weight: 700;
+    color: #696cff;
+    margin-bottom: 0.75rem;
+    font-size: 1.05rem;
+  }
+  .policy-section p,
+  .policy-section li {
+    color: #566a7f;
+    font-size: 0.93rem;
+    line-height: 1.7;
+  }
+  .dark-style .policy-section p,
+  .dark-style .policy-section li { color: #b4b7c1; }
+
+  .policy-section ul { padding-left: 1.25rem; }
+  .policy-section li { margin-bottom: 0.4rem; }
+
+  .policy-meta {
+    font-size: 0.82rem;
+    color: #8c93a4;
+    border-top: 1px solid #f0f0f6;
+    padding-top: 1rem;
+  }
+  .dark-style .policy-meta { border-top-color: #3a3b55; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-lock-alt me-2"></i> Privacy Policy</h4>
+    <p>How we collect, use, and protect your personal information</p>
+  </div>
+  <div class="text-end d-none d-md-block">
+    <div style="font-size:2rem; opacity:.6;">&#128274;</div>
+    <small>{{ PROJECT_NAME }}</small>
+  </div>
+</div>
+
+<div class="card policy-card">
+  <div class="card-body px-4 py-4">
+
+    <div class="policy-section">
+      <h5>1. Introduction</h5>
+      <p>{{ PROJECT_NAME }} ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our management system and services. By using our system, you consent to the practices described in this policy.</p>
+    </div>
+
+    <div class="policy-section">
+      <h5>2. Information We Collect</h5>
+      <p>We may collect the following types of information:</p>
+      <ul>
+        <li><strong>Personal Information:</strong> Name, phone number, email address, and national identity details provided during reservation or registration.</li>
+        <li><strong>Booking Information:</strong> Check-in and check-out dates, room preferences, number of guests, and payment details.</li>
+        <li><strong>Payment Information:</strong> Transaction records, bank details, and payment method information processed through our system.</li>
+        <li><strong>Usage Data:</strong> System access logs, actions performed within the management system, and interaction data.</li>
+        <li><strong>Device Information:</strong> Browser type, operating system, IP address, and device identifiers when accessing the system.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h5>3. How We Use Your Information</h5>
+      <p>We use the collected information for the following purposes:</p>
+      <ul>
+        <li>To process and manage your room reservations and bookings.</li>
+        <li>To communicate with you regarding your reservations, changes, or inquiries.</li>
+        <li>To process payments and maintain financial records.</li>
+        <li>To ensure the safety and security of resort guests and property.</li>
+        <li>To improve our services, system functionality, and guest experience.</li>
+        <li>To comply with legal obligations and regulatory requirements.</li>
+        <li>To send important notifications about your stay or resort updates (with your consent where required).</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h5>4. Information Sharing</h5>
+      <p>We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:</p>
+      <ul>
+        <li><strong>Service Providers:</strong> With trusted third-party service providers who assist in operating our system and providing services (e.g., payment processors, hosting providers), under strict confidentiality agreements.</li>
+        <li><strong>Legal Requirements:</strong> When required by law, regulation, legal process, or governmental request.</li>
+        <li><strong>Safety:</strong> To protect the rights, property, or safety of {{ PROJECT_NAME }}, our guests, or the public.</li>
+        <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets, with prior notice to affected users.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h5>5. Data Security</h5>
+      <p>We implement appropriate technical and organizational security measures to protect your personal information, including:</p>
+      <ul>
+        <li>Encryption of data in transit (HTTPS/TLS).</li>
+        <li>Role-based access controls limiting who can view personal data.</li>
+        <li>Regular security audits and system monitoring.</li>
+        <li>Secure storage with industry-standard protection mechanisms.</li>
+      </ul>
+      <p>While we strive to protect your information, no method of electronic transmission or storage is 100% secure. We cannot guarantee absolute security.</p>
+    </div>
+
+    <div class="policy-section">
+      <h5>6. Data Retention</h5>
+      <p>We retain your personal information only for as long as necessary to fulfill the purposes for which it was collected:</p>
+      <ul>
+        <li>Reservation data is retained for a minimum of 3 years for accounting and legal compliance.</li>
+        <li>System usage logs are retained for up to 12 months for security purposes.</li>
+        <li>Financial records are retained as required by Pakistani tax and accounting regulations.</li>
+        <li>Personal data is securely deleted or anonymized when no longer needed.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h5>7. Your Rights</h5>
+      <p>Under applicable data protection laws, you have the following rights:</p>
+      <ul>
+        <li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li>
+        <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data.</li>
+        <li><strong>Deletion:</strong> Request deletion of your personal data, subject to legal retention requirements.</li>
+        <li><strong>Objection:</strong> Object to the processing of your data for specific purposes.</li>
+        <li><strong>Withdrawal of Consent:</strong> Withdraw consent for data processing at any time (where consent is the legal basis).</li>
+      </ul>
+      <p>To exercise these rights, please contact us using the details provided below.</p>
+    </div>
+
+    <div class="policy-section">
+      <h5>8. Cookies &amp; Tracking</h5>
+      <p>The management system may use cookies and similar technologies to:</p>
+      <ul>
+        <li>Maintain your session and authentication status.</li>
+        <li>Remember your preferences and settings.</li>
+        <li>Analyze system usage and improve performance.</li>
+      </ul>
+      <p>You can control cookie settings through your browser preferences. Disabling cookies may affect system functionality.</p>
+    </div>
+
+    <div class="policy-section">
+      <h5>9. Children's Privacy</h5>
+      <p>Our services are not directed to individuals under the age of 18. We do not knowingly collect personal information from children. If we become aware that we have collected data from a child without parental consent, we will take steps to delete it promptly.</p>
+    </div>
+
+    <div class="policy-section">
+      <h5>10. Changes to This Policy</h5>
+      <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated effective date. We encourage you to review this policy periodically. Continued use of the system after changes constitutes acceptance of the updated policy.</p>
+    </div>
+
+    <div class="policy-section">
+      <h5>11. Contact Us</h5>
+      <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact:</p>
+      <ul>
+        <li><strong>{{ PROJECT_NAME }} Management</strong></li>
+        <li>Website: <a href="{{ WEBSITE_URL }}" target="_blank">{{ WEBSITE_URL }}</a></li>
+      </ul>
+    </div>
+
+    <div class="policy-meta">
+      <p class="mb-0">Last updated: July 2026 &bull; {{ PROJECT_NAME }}</p>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
