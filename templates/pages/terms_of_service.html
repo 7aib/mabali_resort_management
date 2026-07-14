@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Terms of Service — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .terms-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+
+  .terms-section { margin-bottom: 2rem; }
+  .terms-section h5 {
+    font-weight: 700;
+    color: #696cff;
+    margin-bottom: 0.75rem;
+    font-size: 1.05rem;
+  }
+  .terms-section p,
+  .terms-section li {
+    color: #566a7f;
+    font-size: 0.93rem;
+    line-height: 1.7;
+  }
+  .dark-style .terms-section p,
+  .dark-style .terms-section li { color: #b4b7c1; }
+
+  .terms-section ul { padding-left: 1.25rem; }
+  .terms-section li { margin-bottom: 0.4rem; }
+
+  .terms-meta {
+    font-size: 0.82rem;
+    color: #8c93a4;
+    border-top: 1px solid #f0f0f6;
+    padding-top: 1rem;
+  }
+  .dark-style .terms-meta { border-top-color: #3a3b55; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-file me-2"></i> Terms of Service</h4>
+    <p>Please read these terms carefully before using our services</p>
+  </div>
+  <div class="text-end d-none d-md-block">
+    <div style="font-size:2rem; opacity:.6;">&#128220;</div>
+    <small>{{ PROJECT_NAME }}</small>
+  </div>
+</div>
+
+<div class="card terms-card">
+  <div class="card-body px-4 py-4">
+
+    <div class="terms-section">
+      <h5>1. Acceptance of Terms</h5>
+      <p>By accessing and using the {{ PROJECT_NAME }} Management System ("the System"), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must not use the System. These terms apply to all users, including guests, staff, and administrators.</p>
+    </div>
+
+    <div class="terms-section">
+      <h5>2. Booking &amp; Reservations</h5>
+      <p>All reservations are subject to availability and confirmation by {{ PROJECT_NAME }}. By making a reservation through the System, you agree to the following:</p>
+      <ul>
+        <li>A valid advance payment is required to confirm your booking.</li>
+        <li>Check-in and check-out dates are binding once the reservation is confirmed.</li>
+        <li>Room rates are as displayed at the time of booking and may vary by season.</li>
+        <li>{{ PROJECT_NAME }} reserves the right to cancel or modify reservations in the event of unforeseen circumstances.</li>
+      </ul>
+    </div>
+
+    <div class="terms-section">
+      <h5>3. Payment Terms</h5>
+      <ul>
+        <li>Advance payments must be made via the approved payment methods (bank transfer, cash, or other listed methods).</li>
+        <li>Final payments are due upon check-out unless otherwise agreed.</li>
+        <li>All prices are in Pakistani Rupees (PKR) unless stated otherwise.</li>
+        <li>Refunds are processed according to the resort's refund policy and may take up to 7-14 business days.</li>
+      </ul>
+    </div>
+
+    <div class="terms-section">
+      <h5>4. Cancellation &amp; Refund Policy</h5>
+      <ul>
+        <li>Cancellations made more than 7 days before check-in are eligible for a full refund of the advance payment.</li>
+        <li>Cancellations made 3-7 days before check-in may be subject to a cancellation fee.</li>
+        <li>Cancellations made less than 3 days before check-in or no-shows are non-refundable.</li>
+        <li>{{ PROJECT_NAME }} reserves the right to offer alternative arrangements at its discretion.</li>
+      </ul>
+    </div>
+
+    <div class="terms-section">
+      <h5>5. Guest Conduct</h5>
+      <p>All guests are expected to:</p>
+      <ul>
+        <li>Respect resort property, staff, and other guests.</li>
+        <li>Follow all safety rules and guidelines provided by resort staff.</li>
+        <li>Refrain from any illegal, disruptive, or harmful activities on resort premises.</li>
+        <li>Report any damage or issues to resort management promptly.</li>
+      </ul>
+      <p>{{ PROJECT_NAME }} reserves the right to evict any guest who violates these conduct standards without refund.</p>
+    </div>
+
+    <div class="terms-section">
+      <h5>6. Liability &amp; Insurance</h5>
+      <ul>
+        <li>{{ PROJECT_NAME }} is not responsible for loss, theft, or damage to personal belongings.</li>
+        <li>Guests participate in resort activities (boating, fishing, excursions) at their own risk.</li>
+        <li>The resort carries standard liability insurance but does not cover personal accidents arising from guest negligence.</li>
+      </ul>
+    </div>
+
+    <div class="terms-section">
+      <h5>7. Privacy &amp; Data</h5>
+      <p>Personal information collected through the System (names, phone numbers, booking details) is used solely for the purpose of managing your reservation and improving our services. We do not sell or share your personal data with third parties, except as required by law.</p>
+    </div>
+
+    <div class="terms-section">
+      <h5>8. Amendments</h5>
+      <p>{{ PROJECT_NAME }} reserves the right to amend these Terms of Service at any time. Updated terms will be effective immediately upon posting in the System. Continued use of the System after changes constitutes acceptance of the revised terms.</p>
+    </div>
+
+    <div class="terms-section">
+      <h5>9. Contact</h5>
+      <p>For questions or concerns about these Terms of Service, please contact {{ PROJECT_NAME }} management at <a href="{{ WEBSITE_URL }}" target="_blank">{{ WEBSITE_URL }}</a>.</p>
+    </div>
+
+    <div class="terms-meta">
+      <p class="mb-0">Last updated: July 2026 &bull; {{ PROJECT_NAME }}</p>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

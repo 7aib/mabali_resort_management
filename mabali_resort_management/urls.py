@@ -3,8 +3,11 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 
+from .views import terms_of_service_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("terms-of-service/", terms_of_service_view, name='terms_of_service'),
     path("", include("authentication.urls")),
     path("", include("dashboard.urls")),
     path("inventory/", include("inventory.urls")),
