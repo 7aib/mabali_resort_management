@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Rooms — {{ PROJECT_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #696cff 0%, #9055fd 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(105, 108, 255, 0.25);
+  }
+  .page-header h4 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .92rem; }
+
+  .list-card { border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+  .list-card .card-header {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 2px solid #f0f0f6;
+    padding: 18px 24px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .dark-style .list-card .card-header { border-bottom-color: #3a3b55; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4><i class="bx bx-bed me-2"></i> Manage Rooms / Huts</h4>
+    <p>Add, edit, or remove rooms and huts from the system</p>
+  </div>
+  <div>
+    <a href="{% url 'reservations:room_create' %}" class="btn btn-light">
+      <i class="bx bx-plus me-1"></i> Add Room
+    </a>
+  </div>
+</div>
+
+<div class="card list-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-list-ul me-2 text-primary"></i>All Rooms</span>
+    <span class="badge bg-label-primary">{{ rooms|length }} rooms</span>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3 mb-4">
+      <div class="col-12 col-md-6">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bx bx-search"></i></span>
+          <input type="text" class="form-control" name="search" placeholder="Search rooms by name..." value="{{ search_query }}">
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <select class="form-select" name="category">
+          <option value="">All Categories</option>
+          {% for val, text in categories %}
+          <option value="{{ val }}" {% if val == category_filter %}selected{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bx bx-filter me-1"></i> Filter
+        </button>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th class="text-end">Rate / Night</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for room in rooms %}
+          <tr>
+            <td class="fw-semibold">{{ room.name }}</td>
+            <td><span class="badge bg-label-primary">{{ room.get_category_display }}</span></td>
+            <td class="text-end fw-bold">{{ room.rate_per_night }}</td>
+            <td>
+              {% if room.is_active %}
+                <span class="badge bg-label-success">Active</span>
+              {% else %}
+                <span class="badge bg-label-danger">Inactive</span>
+              {% endif %}
+            </td>
+            <td><small class="text-muted">{{ room.created_at|date:"M d, Y" }}</small></td>
+            <td class="text-center">
+              <a href="{% url 'reservations:room_edit' room.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                <i class="bx bx-edit"></i>
+              </a>
+              <form method="post" action="{% url 'reservations:room_delete' room.pk %}" class="d-inline" onsubmit="return confirm('Delete {{ room.name }}?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                  <i class="bx bx-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="bx bx-inbox" style="font-size:1.5rem;"></i>
+              <p class="mb-0 mt-1">No rooms found.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

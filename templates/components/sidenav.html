@@ -213,12 +213,17 @@
       </li>
 
       <!-- Rooms -->
-      <li class="menu-item {% if request.resolver_match.url_name == 'reservation_list' or request.resolver_match.url_name == 'reservation_create' or request.resolver_match.url_name == 'room_status' %}open{% endif %}">
+      <li class="menu-item {% if request.resolver_match.url_name == 'reservation_list' or request.resolver_match.url_name == 'reservation_create' or request.resolver_match.url_name == 'room_status' or request.resolver_match.url_name == 'room_list' or request.resolver_match.url_name == 'room_create' or request.resolver_match.url_name == 'room_edit' %}open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-bed"></i>
           <div data-i18n="Rooms">Rooms</div>
         </a>
         <ul class="menu-sub">
+          <li class="menu-item {% if request.resolver_match.url_name == 'room_list' or request.resolver_match.url_name == 'room_create' or request.resolver_match.url_name == 'room_edit' %}active{% endif %}">
+            <a href="{% url 'reservations:room_list' %}" class="menu-link">
+              <div data-i18n="Manage Rooms">Manage Rooms</div>
+            </a>
+          </li>
           <li class="menu-item {% if request.resolver_match.url_name == 'reservation_create' %}active{% endif %}">
             <a href="{% url 'reservations:reservation_create' %}" class="menu-link">
               <div data-i18n="New Reservation">New Reservation</div>

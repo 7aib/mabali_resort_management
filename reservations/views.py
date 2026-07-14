@@ -14,7 +14,8 @@ from mabali_resort_management.decorators import roles_required
 from error_logs.decorators import log_errors
 from .models import Room, Reservation
 from .choices import (
-    PaymentMethodChoices, PaymentTypeChoices, ReservationStatusChoices, BankChoices,
+    RoomCategoryChoices, PaymentMethodChoices, PaymentTypeChoices,
+    ReservationStatusChoices, BankChoices,
 )
 
 User = get_user_model()
@@ -364,3 +365,131 @@ def room_status_view(request: HttpRequest) -> HttpResponse:
         'today': today,
     }
     return render(request, 'reservations/room_status.html', context)
+
+
+# ── Room Management CRUD ────────────────────────────────────────────
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@log_errors
+def room_create_view(request: HttpRequest) -> HttpResponse:
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        category = request.POST.get('category', '')
+        rate_per_night = request.POST.get('rate_per_night', 0)
+        is_active = request.POST.get('is_active') == 'on'
+
+        if not name or not category:
+            messages.error(request, 'Name and category are required.')
+            return redirect('reservations:room_create')
+
+        if Room.objects.filter(name__iexact=name, is_deleted=False).exists():
+            messages.error(request, 'A room with this name already exists.')
+            return redirect('reservations:room_create')
+
+        try:
+            rate = Decimal(str(rate_per_night))
+        except (ValueError, TypeError):
+            rate = Decimal('0')
+
+        Room.objects.create(
+            name=name,
+            category=category,
+            rate_per_night=rate,
+            is_active=is_active,
+        )
+        messages.success(request, 'Room "%s" created successfully.' % name)
+        return redirect('reservations:room_list')
+
+    context = {
+        'categories': RoomCategoryChoices.choices,
+    }
+    return render(request, 'reservations/room_create.html', context)
+
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@log_errors
+def room_list_view(request: HttpRequest) -> HttpResponse:
+    rooms = Room.objects.filter(is_deleted=False).order_by('name')
+
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        rooms = rooms.filter(name__icontains=search_query)
+
+    category_filter = request.GET.get('category', '').strip()
+    if category_filter:
+        rooms = rooms.filter(category=category_filter)
+
+    context = {
+        'rooms': rooms,
+        'search_query': search_query,
+        'category_filter': category_filter,
+        'categories': RoomCategoryChoices.choices,
+    }
+    return render(request, 'reservations/room_list.html', context)
+
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@log_errors
+def room_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
+    try:
+        room = Room.objects.get(pk=pk, is_deleted=False)
+    except Room.DoesNotExist:
+        messages.error(request, 'Room not found.')
+        return redirect('reservations:room_list')
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        category = request.POST.get('category', '')
+        rate_per_night = request.POST.get('rate_per_night', 0)
+        is_active = request.POST.get('is_active') == 'on'
+
+        if not name or not category:
+            messages.error(request, 'Name and category are required.')
+            return redirect('reservations:room_edit', pk=pk)
+
+        if Room.objects.filter(name__iexact=name, is_deleted=False).exclude(pk=pk).exists():
+            messages.error(request, 'A room with this name already exists.')
+            return redirect('reservations:room_edit', pk=pk)
+
+        try:
+            rate = Decimal(str(rate_per_night))
+        except (ValueError, TypeError):
+            rate = Decimal('0')
+
+        room.name = name
+        room.category = category
+        room.rate_per_night = rate
+        room.is_active = is_active
+        room.save()
+
+        messages.success(request, 'Room "%s" updated successfully.' % room.name)
+        return redirect('reservations:room_list')
+
+    context = {
+        'room': room,
+        'categories': RoomCategoryChoices.choices,
+    }
+    return render(request, 'reservations/room_edit.html', context)
+
+
+@login_required
+@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@log_errors
+def room_delete_view(request: HttpRequest, pk: int) -> HttpResponse:
+    try:
+        room = Room.objects.get(pk=pk, is_deleted=False)
+    except Room.DoesNotExist:
+        messages.error(request, 'Room not found.')
+        return redirect('reservations:room_list')
+
+    if request.method == 'POST':
+        room.is_deleted = True
+        room.deleted_at = timezone.now()
+        room.save(update_fields=['is_deleted', 'deleted_at'])
+        messages.success(request, 'Room "%s" deleted successfully.' % room.name)
+        return redirect('reservations:room_list')
+
+    return redirect('reservations:room_list')
