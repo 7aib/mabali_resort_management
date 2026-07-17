@@ -2,5 +2,5 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "gunicorn mabali_resort_management.wsgi"
-releaseCommand = "python manage.py migrate --noinput && python manage.py collectstatic --noinput --clear"
+releaseCommand = "python manage.py migrate --noinput"
+startCommand = "python manage.py collectstatic --noinput --clear && gunicorn mabali_resort_management.wsgi:application"
