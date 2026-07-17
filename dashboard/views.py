@@ -25,7 +25,6 @@ EXEMPT_FROM_POS = ['Water Sports']
 
 @login_required
 @log_errors
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.HR_MANAGER,)
 def dashboard_view(request: HttpResponse) -> HttpResponse:
     """Display the main dashboard with financial and operational metrics."""
     today = timezone.localdate()
