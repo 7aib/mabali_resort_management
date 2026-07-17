@@ -657,14 +657,549 @@
 
 {% else %}
 
-<!-- REGULAR USER DASHBOARD -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ROLE-SPECIFIC DASHBOARDS                                      -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+{% if user_role == 'cashier' %}
+<!-- CASHIER DASHBOARD -->
+<div class="page-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#696cff 0%,#9055fd 100%);border-radius:16px;padding:28px 32px;margin-bottom:28px;color:#fff;box-shadow:0 8px 32px rgba(105,108,255,.25);">
+  <div>
+    <h4 style="font-size:1.4rem;font-weight:700;margin:0;"><i class="bx bx-calculator me-2"></i> Cashier Dashboard</h4>
+    <p style="margin:4px 0 0;opacity:.85;font-size:.92rem;">Hello, {{ request.user.get_full_name|default:request.user.username }}!</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(105,108,255,.12);color:#696cff;"><i class="bx bx-list-check"></i></div>
+        <div>
+          <div class="text-muted small">My Entries Today</div>
+          <div class="fs-4 fw-bold">{{ cashier_entry_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(46,125,50,.12);color:#2e7d32;"><i class="bx bx-dollar"></i></div>
+        <div>
+          <div class="text-muted small">Collected Today</div>
+          <div class="fs-4 fw-bold">Rs. {{ cashier_total_collected|floatformat:0 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(33,150,243,.12);color:#2196f3;"><i class="bx bx-bed"></i></div>
+        <div>
+          <div class="text-muted small">Rooms</div>
+          <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
+          <small class="text-muted">{{ occupied_count }} occupied · {{ available_count }} free</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba({% if pending_handover %}255,87,34{% else %}76,175,80{% endif %},.12);color:{% if pending_handover %}#ff5722{% else %}#4caf50{% endif %};"><i class="bx bx-transfer"></i></div>
+        <div>
+          <div class="text-muted small">Handover Status</div>
+          <div class="fs-6 fw-bold">{% if pending_handover %}<span class="text-warning">Already Handed</span>{% else %}<span class="text-success">Pending</span>{% endif %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card section-card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-history me-2 text-primary"></i>My Recent Entries</span>
+    <a href="{% url 'cash_counters:entry_form' %}" class="btn btn-sm btn-primary"><i class="bx bx-plus me-1"></i> New Entry</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Time</th><th>Guest</th><th>Phone</th><th>Visit</th><th>Persons</th><th>Gate</th><th>Status</th><th>Payment</th><th class="text-end">Amount</th></tr>
+        </thead>
+        <tbody>
+          {% for tx in cashier_entries %}
+          <tr>
+            <td><small class="text-muted">{{ tx.created_at|time:"H:i" }}</small></td>
+            <td class="fw-semibold">{{ tx.customer.get_full_name|default:tx.customer.username }}</td>
+            <td><small>{{ tx.customer.phone_number|default:"—" }}</small></td>
+            <td><span class="badge bg-label-primary">{{ tx.visit_type }}</span></td>
+            <td class="text-center">{{ tx.no_of_persons }}</td>
+            <td><small>{{ tx.gate }}</small></td>
+            <td>{% if tx.status == "New" %}<span class="badge bg-label-success">New</span>{% else %}<span class="badge bg-label-warning">Old</span>{% endif %}</td>
+            <td>{{ tx.payment_method }}</td>
+            <td class="text-end fw-bold">Rs. {{ tx.entrytransaction.amount|floatformat:0 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center text-muted py-4">No entries recorded today.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% elif user_role == 'main_cashier' %}
+<!-- MAIN CASHIER DASHBOARD -->
+<div class="page-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#696cff 0%,#9055fd 100%);border-radius:16px;padding:28px 32px;margin-bottom:28px;color:#fff;box-shadow:0 8px 32px rgba(105,108,255,.25);">
+  <div>
+    <h4 style="font-size:1.4rem;font-weight:700;margin:0;"><i class="bx bx-money-withdraw me-2"></i> Main Cashier Dashboard</h4>
+    <p style="margin:4px 0 0;opacity:.85;font-size:.92rem;">Hello, {{ request.user.get_full_name|default:request.user.username }}!</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(46,125,50,.12);color:#2e7d32;"><i class="bx bx-dollar"></i></div>
+        <div>
+          <div class="text-muted small">Cash Register Today</div>
+          <div class="fs-4 fw-bold">Rs. {{ total_cash_register|floatformat:0 }}</div>
+          <small class="text-muted">{{ cash_register_count }} entries</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(33,150,243,.12);color:#2196f3;"><i class="bx bx-transfer"></i></div>
+        <div>
+          <div class="text-muted small">Cash Handover Today</div>
+          <div class="fs-4 fw-bold">Rs. {{ total_cash_handover|floatformat:0 }}</div>
+          <small class="text-muted">{{ cash_handover_count }} handovers</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(156,39,176,.12);color:#9c27b0;"><i class="bx bx-dollar"></i></div>
+        <div>
+          <div class="text-muted small">Entry Revenue</div>
+          <div class="fs-4 fw-bold">Rs. {{ entry_revenue|floatformat:0 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(233,30,99,.12);color:#e91e63;"><i class="bx bx-bed"></i></div>
+        <div>
+          <div class="text-muted small">Rooms</div>
+          <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
+          <small class="text-muted">{{ occupied_count }} occupied · {{ available_count }} free</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-md-6">
+    <div class="card section-card">
+      <div class="card-header"><i class="bx bx-money-withdraw me-2 text-primary"></i>Quick Actions</div>
+      <div class="card-body">
+        <a href="{% url 'cash_counters:cash_register' %}" class="btn btn-outline-primary me-2 mb-2"><i class="bx bx-money me-1"></i> Cash Register</a>
+        <a href="{% url 'cash_counters:cash_handover' %}" class="btn btn-outline-primary me-2 mb-2"><i class="bx bx-transfer me-1"></i> Cash Handover</a>
+        <a href="{% url 'cash_counters:daily_sales' %}" class="btn btn-outline-primary me-2 mb-2"><i class="bx bx-bar-chart me-1"></i> Daily Sales</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6">
+    <div class="card section-card">
+      <div class="card-header"><i class="bx bx-history me-2 text-primary"></i>Room Status</div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2"><span><i class="bx bx-circle text-danger me-1" style="font-size:.6rem;"></i> Occupied</span><span class="fw-bold">{{ occupied_count }}</span></div>
+        <div class="d-flex justify-content-between mb-2"><span><i class="bx bx-circle text-warning me-1" style="font-size:.6rem;"></i> Reserved</span><span class="fw-bold">{{ reserved_count }}</span></div>
+        <div class="d-flex justify-content-between"><span><i class="bx bx-circle text-success me-1" style="font-size:.6rem;"></i> Available</span><span class="fw-bold">{{ available_count }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% elif user_role == 'host' %}
+<!-- HOST DASHBOARD -->
+<div class="page-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#696cff 0%,#9055fd 100%);border-radius:16px;padding:28px 32px;margin-bottom:28px;color:#fff;box-shadow:0 8px 32px rgba(105,108,255,.25);">
+  <div>
+    <h4 style="font-size:1.4rem;font-weight:700;margin:0;"><i class="bx bx-bed me-2"></i> Host Dashboard</h4>
+    <p style="margin:4px 0 0;opacity:.85;font-size:.92rem;">Hello, {{ request.user.get_full_name|default:request.user.username }}!</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(233,30,99,.12);color:#e91e63;"><i class="bx bx-bed"></i></div>
+        <div>
+          <div class="text-muted small">Rooms</div>
+          <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
+          <small class="text-muted">{{ occupied_count }} occupied · {{ reserved_count }} reserved · {{ available_count }} free</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(76,175,80,.12);color:#4caf50;"><i class="bx bx-log-in"></i></div>
+        <div>
+          <div class="text-muted small">Check-ins Today</div>
+          <div class="fs-4 fw-bold">{{ today_checkins|length }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(255,152,0,.12);color:#f57c00;"><i class="bx bx-log-out"></i></div>
+        <div>
+          <div class="text-muted small">Check-outs Today</div>
+          <div class="fs-4 fw-bold">{{ today_checkouts|length }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(105,108,255,.12);color:#696cff;"><i class="bx bx-group"></i></div>
+        <div>
+          <div class="text-muted small">Guests Today</div>
+          <div class="fs-4 fw-bold">{{ total_guests }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-lg-6">
+    <div class="card section-card">
+      <div class="card-header"><i class="bx bx-log-in me-2 text-success"></i>Today's Check-ins</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Guest</th><th>Room</th><th>Nights</th><th>Phone</th></tr></thead>
+            <tbody>
+              {% for res in today_checkins %}
+              <tr>
+                <td class="fw-semibold">{{ res.guest_name|default:res.customer.get_full_name|default:res.customer.username }}</td>
+                <td><span class="badge bg-label-success">{{ res.room.name }}</span></td>
+                <td>{{ res.nights }}</td>
+                <td><small>{{ res.phone_number|default:res.customer.phone_number|default:"—" }}</small></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No check-ins today</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card section-card">
+      <div class="card-header"><i class="bx bx-log-out me-2 text-warning"></i>Today's Check-outs</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Guest</th><th>Room</th><th>Nights</th><th>Phone</th></tr></thead>
+            <tbody>
+              {% for res in today_checkouts %}
+              <tr>
+                <td class="fw-semibold">{{ res.guest_name|default:res.customer.get_full_name|default:res.customer.username }}</td>
+                <td><span class="badge bg-label-warning">{{ res.room.name }}</span></td>
+                <td>{{ res.nights }}</td>
+                <td><small>{{ res.phone_number|default:res.customer.phone_number|default:"—" }}</small></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No check-outs today</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card section-card mb-4">
+  <div class="card-header"><i class="bx bx-building-house me-2 text-danger"></i>Room Status</div>
+  <div class="card-body">
+    <div class="d-flex justify-content-between mb-2"><span><i class="bx bx-circle text-danger me-1" style="font-size:.6rem;"></i> Occupied</span><span class="fw-bold">{{ occupied_count }}</span></div>
+    <div class="d-flex justify-content-between mb-2"><span><i class="bx bx-circle text-warning me-1" style="font-size:.6rem;"></i> Reserved</span><span class="fw-bold">{{ reserved_count }}</span></div>
+    <div class="d-flex justify-content-between mb-3"><span><i class="bx bx-circle text-success me-1" style="font-size:.6rem;"></i> Available</span><span class="fw-bold">{{ available_count }}</span></div>
+    <a href="{% url 'reservations:room_status' %}" class="btn btn-sm btn-outline-primary"><i class="bx bx-show me-1"></i> View Full Status</a>
+    <a href="{% url 'reservations:reservation_create' %}" class="btn btn-sm btn-primary ms-2"><i class="bx bx-plus me-1"></i> New Reservation</a>
+  </div>
+</div>
+
+{% elif user_role == 'sale' %}
+<!-- SALE DASHBOARD -->
+<div class="page-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#696cff 0%,#9055fd 100%);border-radius:16px;padding:28px 32px;margin-bottom:28px;color:#fff;box-shadow:0 8px 32px rgba(105,108,255,.25);">
+  <div>
+    <h4 style="font-size:1.4rem;font-weight:700;margin:0;"><i class="bx bx-user me-2"></i> Sale Dashboard</h4>
+    <p style="margin:4px 0 0;opacity:.85;font-size:.92rem;">Hello, {{ request.user.get_full_name|default:request.user.username }}!</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(105,108,255,.12);color:#696cff;"><i class="bx bx-list-check"></i></div>
+        <div>
+          <div class="text-muted small">Entries Today</div>
+          <div class="fs-4 fw-bold">{{ today_entry_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(76,175,80,.12);color:#4caf50;"><i class="bx bx-user-plus"></i></div>
+        <div>
+          <div class="text-muted small">New Guests</div>
+          <div class="fs-4 fw-bold">{{ new_guests }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(255,152,0,.12);color:#f57c00;"><i class="bx bx-user-voice"></i></div>
+        <div>
+          <div class="text-muted small">Returning Guests</div>
+          <div class="fs-4 fw-bold">{{ old_guests }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(233,30,99,.12);color:#e91e63;"><i class="bx bx-bed"></i></div>
+        <div>
+          <div class="text-muted small">Rooms</div>
+          <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-lg-6">
+    <div class="card section-card">
+      <div class="card-header"><i class="bx bx-bar-chart me-2 text-primary"></i>Visit Type Breakdown</div>
+      <div class="card-body">
+        {% for v in visit_breakdown %}
+        <div class="d-flex justify-content-between mb-2">
+          <span>{{ v.visit_type }}</span>
+          <span class="badge bg-label-primary">{{ v.count }}</span>
+        </div>
+        {% empty %}
+        <p class="text-muted text-center mb-0">No entries today</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card section-card">
+      <div class="card-header"><i class="bx bx-history me-2 text-primary"></i>Quick Actions</div>
+      <div class="card-body">
+        <a href="{% url 'cash_counters:entry_form' %}" class="btn btn-primary me-2 mb-2"><i class="bx bx-plus me-1"></i> New Guest Entry</a>
+        <a href="{% url 'cash_counters:daily_sales' %}" class="btn btn-outline-primary me-2 mb-2"><i class="bx bx-bar-chart me-1"></i> Daily Sales</a>
+        <a href="{% url 'reservations:room_status' %}" class="btn btn-outline-primary me-2 mb-2"><i class="bx bx-bed me-1"></i> Room Status</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% elif user_role == 'driver' %}
+<!-- DRIVER DASHBOARD -->
+<div class="page-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#696cff 0%,#9055fd 100%);border-radius:16px;padding:28px 32px;margin-bottom:28px;color:#fff;box-shadow:0 8px 32px rgba(105,108,255,.25);">
+  <div>
+    <h4 style="font-size:1.4rem;font-weight:700;margin:0;"><i class="bx bx-car me-2"></i> Driver Dashboard</h4>
+    <p style="margin:4px 0 0;opacity:.85;font-size:.92rem;">Hello, {{ request.user.get_full_name|default:request.user.username }}!</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(233,30,99,.12);color:#e91e63;"><i class="bx bx-car"></i></div>
+        <div>
+          <div class="text-muted small">Ambulance Logs Today</div>
+          <div class="fs-4 fw-bold">{{ ambulance_log_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(33,150,243,.12);color:#2196f3;"><i class="bx bx-bed"></i></div>
+        <div>
+          <div class="text-muted small">Rooms</div>
+          <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
+          <small class="text-muted">{{ occupied_count }} occupied · {{ available_count }} free</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(105,108,255,.12);color:#696cff;"><i class="bx bx-group"></i></div>
+        <div>
+          <div class="text-muted small">Guests Today</div>
+          <div class="fs-4 fw-bold">{{ total_guests }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card section-card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-car me-2 text-primary"></i>Today's Ambulance Logs</span>
+    <a href="{% url 'inventory:ambulance_log' %}" class="btn btn-sm btn-primary"><i class="bx bx-plus me-1"></i> New Log</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light"><tr><th>Patient</th><th>Type</th><th>Hospital</th><th>Start KM</th><th>End KM</th><th class="text-end">Expense</th></tr></thead>
+        <tbody>
+          {% for log in today_ambulance_logs %}
+          <tr>
+            <td class="fw-semibold">{{ log.patient_name }}</td>
+            <td><span class="badge bg-label-primary">{{ log.get_patient_type_display }}</span></td>
+            <td>{{ log.get_hospital_display }}</td>
+            <td>{{ log.start_reading_km }}</td>
+            <td>{{ log.end_reading_km }}</td>
+            <td class="text-end fw-bold">Rs. {{ log.medical_expense|floatformat:0 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No ambulance logs today.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% elif user_role == 'waiter' %}
+<!-- WAITER DASHBOARD -->
+<div class="page-header d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#696cff 0%,#9055fd 100%);border-radius:16px;padding:28px 32px;margin-bottom:28px;color:#fff;box-shadow:0 8px 32px rgba(105,108,255,.25);">
+  <div>
+    <h4 style="font-size:1.4rem;font-weight:700;margin:0;"><i class="bx bx-gift me-2"></i> Waiter Dashboard</h4>
+    <p style="margin:4px 0 0;opacity:.85;font-size:.92rem;">Hello, {{ request.user.get_full_name|default:request.user.username }}!</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(255,152,0,.12);color:#f57c00;"><i class="bx bx-gift"></i></div>
+        <div>
+          <div class="text-muted small">Free Bills Today</div>
+          <div class="fs-4 fw-bold">{{ free_bill_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(46,125,50,.12);color:#2e7d32;"><i class="bx bx-dollar"></i></div>
+        <div>
+          <div class="text-muted small">Total Bill Amount</div>
+          <div class="fs-4 fw-bold">Rs. {{ free_bills_total|floatformat:0 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(33,150,243,.12);color:#2196f3;"><i class="bx bx-bed"></i></div>
+        <div>
+          <div class="text-muted small">Rooms</div>
+          <div class="fs-4 fw-bold">{{ occupied_count }}/{{ total_rooms }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:rgba(105,108,255,.12);color:#696cff;"><i class="bx bx-group"></i></div>
+        <div>
+          <div class="text-muted small">Guests Today</div>
+          <div class="fs-4 fw-bold">{{ total_guests }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card section-card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bx bx-gift me-2 text-warning"></i>Today's Complementary Bills</span>
+    <a href="{% url 'complementary:free_billing' %}" class="btn btn-sm btn-primary"><i class="bx bx-plus me-1"></i> New Bill</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light"><tr><th>Guest</th><th>Head</th><th>Department</th><th>Status</th><th class="text-end">Amount</th></tr></thead>
+        <tbody>
+          {% for bill in today_free_bills %}
+          <tr>
+            <td class="fw-semibold">{{ bill.guest_name|default:"—" }}</td>
+            <td><span class="badge bg-label-info">{{ bill.get_head_display }}</span></td>
+            <td>{{ bill.get_department_display }}</td>
+            <td><span class="badge bg-label-warning">{{ bill.get_bill_status_display }}</span></td>
+            <td class="text-end fw-bold">Rs. {{ bill.total_bill_amount|floatformat:0 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No complementary bills today.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- DEFAULT WELCOME (for any unlisted role) -->
 <div class="row justify-content-center">
   <div class="col-12 col-md-8 col-lg-6">
     <div class="card">
       <div class="card-body text-center py-5">
-        <div class="mb-4">
-          <i class="bx bx-user-circle display-1 text-primary"></i>
-        </div>
+        <div class="mb-4"><i class="bx bx-user-circle display-1 text-primary"></i></div>
         <h2 class="mb-3">Welcome to {{ PROJECT_NAME }}</h2>
         <h4 class="text-muted mb-4">Hello, {{ request.user.get_full_name|default:request.user.username }}!</h4>
         <p class="lead mb-4">You are successfully logged into the resort management system.</p>
@@ -702,7 +1237,6 @@
     </div>
   </div>
 </div>
-
 <script>
 function updateTime() {
   var now = new Date();
@@ -712,6 +1246,8 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 1000);
 </script>
+
+{% endif %}
 
 {% endif %}
 {% endblock %}
