@@ -6,13 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('inventory', '0002_alter_ammotransactionlog_transaction_status_and_more'),
+        ("inventory", "0002_alter_ammotransactionlog_transaction_status_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='ammotransactionlog',
-            name='bullet_type',
-            field=models.CharField(blank=True, choices=[('9mm', '9mm'), ('.45', '.45'), ('.22', '.22'), ('.38', '.38')], default='9mm', max_length=10),
+            model_name="ammotransactionlog",
+            name="bullet_type",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("9mm", "9mm"),
+                    (".45", ".45"),
+                    (".22", ".22"),
+                    (".38", ".38"),
+                ],
+                default="9mm",
+                max_length=10,
+            ),
         ),
     ]

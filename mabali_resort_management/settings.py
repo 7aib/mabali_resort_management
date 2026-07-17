@@ -16,19 +16,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-h(8vs$%0d^@olpg98b$oguhfwu($j$taxir!b=o4zu9pl8o2th'  # Default for development only
+    "DJANGO_SECRET_KEY",
+    "django-insecure-h(8vs$%0d^@olpg98b$oguhfwu($j$taxir!b=o4zu9pl8o2th",  # Default for development only
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 CSRF_TRUSTED_ORIGINS = os.getenv(
-    'CSRF_TRUSTED_ORIGINS',
-    'https://mabaliresortmanagement-production.up.railway.app'
-).split(',')
+    "CSRF_TRUSTED_ORIGINS", "https://mabaliresortmanagement-production.up.railway.app"
+).split(",")
 
 
 # Application definition
@@ -151,48 +150,44 @@ LOGIN_URL = "/"
 
 # ── Logging ────────────────────────────────────────────────────────
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-
-    'formatters': {
-        'verbose': {
-            'format': '[{levelname}] {asctime} {name}: {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{levelname}] {asctime} {name}: {message}",
+            "style": "{",
         },
     },
-
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
-        'database': {
-            'level': 'ERROR',
-            '()': 'error_logs.handlers.DatabaseLogHandler',
-            'formatter': 'verbose',
-        },
-    },
-
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'database'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['console', 'database'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-            'propagate': False,
+        "database": {
+            "level": "ERROR",
+            "()": "error_logs.handlers.DatabaseLogHandler",
+            "formatter": "verbose",
         },
     },
-
-    'root': {
-        'handlers': ['console', 'database'],
-        'level': 'ERROR',
+    "loggers": {
+        "django": {
+            "handlers": ["console", "database"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["console", "database"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+    "root": {
+        "handlers": ["console", "database"],
+        "level": "ERROR",
     },
 }

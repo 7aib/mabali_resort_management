@@ -1,14 +1,19 @@
 """Reservations app models."""
-from django.db import models
-from django.core.validators import MinValueValidator
+
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from django.db import models
 from django.utils import timezone
 
 from authentication.models import User
-from mabali_resort_management.mixins import TimeStampedModelMixin, SoftDeleteModelMixin
+from mabali_resort_management.mixins import SoftDeleteModelMixin, TimeStampedModelMixin
+
 from .choices import (
-    RoomCategoryChoices, PaymentMethodChoices, PaymentTypeChoices,
-    ReservationStatusChoices, BankChoices,
+    BankChoices,
+    PaymentMethodChoices,
+    PaymentTypeChoices,
+    ReservationStatusChoices,
+    RoomCategoryChoices,
 )
 
 
@@ -23,7 +28,7 @@ class Room(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self) -> str:
         return self.name
@@ -33,16 +38,24 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     """A single reservation booking with advance and final payment tracking."""
 
     # Guest info
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reservations')
-    phone_number = models.CharField(max_length=15, blank=True, default='')
-    guest_name = models.CharField(max_length=150, blank=True, default='')
+    customer = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="reservations"
+    )
+    phone_number = models.CharField(max_length=15, blank=True, default="")
+    guest_name = models.CharField(max_length=150, blank=True, default="")
 
     # Occupancy
-    no_of_adults = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
-    no_of_kids = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
+    no_of_adults = models.PositiveIntegerField(
+        default=1, validators=[MinValueValidator(1)]
+    )
+    no_of_kids = models.PositiveIntegerField(
+        default=0, validators=[MinValueValidator(0)]
+    )
 
     # Room
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='reservations')
+    room = models.ForeignKey(
+        Room, on_delete=models.CASCADE, related_name="reservations"
+    )
 
     # Dates
     check_in_date = models.DateField()
@@ -63,7 +76,7 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
     )
     advance_date = models.DateField(null=True, blank=True)
     advance_bank = models.CharField(
-        max_length=30, choices=BankChoices.choices, blank=True, default=''
+        max_length=30, choices=BankChoices.choices, blank=True, default=""
     )
 
     # Final payment
@@ -71,27 +84,34 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
         max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(0)]
     )
     payment_type = models.CharField(
-        max_length=10, choices=PaymentTypeChoices.choices, default=PaymentTypeChoices.ADVANCE
+        max_length=10,
+        choices=PaymentTypeChoices.choices,
+        default=PaymentTypeChoices.ADVANCE,
     )
     payment_method = models.CharField(
-        max_length=10, choices=PaymentMethodChoices.choices, blank=True, default=''
+        max_length=10, choices=PaymentMethodChoices.choices, blank=True, default=""
     )
 
     # Status
     status = models.CharField(
-        max_length=20, choices=ReservationStatusChoices.choices,
-        default=ReservationStatusChoices.CONFIRMED
+        max_length=20,
+        choices=ReservationStatusChoices.choices,
+        default=ReservationStatusChoices.CONFIRMED,
     )
 
     # Meta
-    remarks = models.TextField(blank=True, default='')
+    remarks = models.TextField(blank=True, default="")
     created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_reservations'
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_reservations",
     )
 
     class Meta:
-        ordering = ['-check_in_date', '-created_at']
-        verbose_name_plural = 'Reservations'
+        ordering = ["-check_in_date", "-created_at"]
+        verbose_name_plural = "Reservations"
 
     def __str__(self) -> str:
         return f"{self.guest_name} — {self.room.name} ({self.check_in_date})"
@@ -113,7 +133,10 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
         overlapping = Reservation.objects.filter(
             room=self.room,
             is_deleted=False,
-            status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
+            status__in=[
+                ReservationStatusChoices.CONFIRMED,
+                ReservationStatusChoices.CHECKED_IN,
+            ],
             check_in_date__lte=self.check_out_date,
             check_out_date__gte=self.check_in_date,
         )
@@ -124,5 +147,10 @@ class Reservation(TimeStampedModelMixin, SoftDeleteModelMixin, models.Model):
             conflict = overlapping.first()
             raise ValidationError(
                 'Room "%s" is already booked from %s to %s (Guest: %s).'
-                % (self.room.name, conflict.check_in_date, conflict.check_out_date, conflict.guest_name)
+                % (
+                    self.room.name,
+                    conflict.check_in_date,
+                    conflict.check_out_date,
+                    conflict.guest_name,
+                )
             )

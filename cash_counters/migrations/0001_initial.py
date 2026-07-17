@@ -15,27 +15,110 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='EntryCounterForm',
+            name="EntryCounterForm",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('location', models.CharField(choices=[('Islamabad', 'Islamabad'), ('Rawalpindi', 'Rawalpindi'), ('Lahore', 'Lahore'), ('Karachi', 'Karachi'), ('Peshawar', 'Peshawar'), ('Quetta', 'Quetta'), ('Multan', 'Multan'), ('Faisalabad', 'Faisalabad'), ('Other', 'Other')], default='Other', max_length=50)),
-                ('no_of_persons', models.PositiveIntegerField(default=1)),
-                ('no_of_kids', models.PositiveIntegerField(default=0)),
-                ('visit_type', models.CharField(choices=[('Paid', 'Paid'), ('Complementary', 'Complementary'), ('Night Stay', 'Night Stay'), ('Group', 'Group'), ('Decor team events', 'Decor team events')], default='Paid', max_length=50)),
-                ('gate', models.CharField(choices=[('Main Gate', 'Main Gate'), ('Event Gate', 'Event Gate'), ('Lake Side gate', 'Lake Side gate')], default='Main Gate', max_length=50)),
-                ('status', models.CharField(choices=[('Old', 'Old'), ('New', 'New')], max_length=10)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='entries', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "location",
+                    models.CharField(
+                        choices=[
+                            ("Islamabad", "Islamabad"),
+                            ("Rawalpindi", "Rawalpindi"),
+                            ("Lahore", "Lahore"),
+                            ("Karachi", "Karachi"),
+                            ("Peshawar", "Peshawar"),
+                            ("Quetta", "Quetta"),
+                            ("Multan", "Multan"),
+                            ("Faisalabad", "Faisalabad"),
+                            ("Other", "Other"),
+                        ],
+                        default="Other",
+                        max_length=50,
+                    ),
+                ),
+                ("no_of_persons", models.PositiveIntegerField(default=1)),
+                ("no_of_kids", models.PositiveIntegerField(default=0)),
+                (
+                    "visit_type",
+                    models.CharField(
+                        choices=[
+                            ("Paid", "Paid"),
+                            ("Complementary", "Complementary"),
+                            ("Night Stay", "Night Stay"),
+                            ("Group", "Group"),
+                            ("Decor team events", "Decor team events"),
+                        ],
+                        default="Paid",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "gate",
+                    models.CharField(
+                        choices=[
+                            ("Main Gate", "Main Gate"),
+                            ("Event Gate", "Event Gate"),
+                            ("Lake Side gate", "Lake Side gate"),
+                        ],
+                        default="Main Gate",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("Old", "Old"), ("New", "New")], max_length=10
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "customer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="entries",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='EntryTransaction',
+            name="EntryTransaction",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('payment_method', models.CharField(choices=[('Cash', 'Cash'), ('Card', 'Card')], default='Cash', max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('entry_form', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='transaction', to='cash_counters.entrycounterform')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("amount", models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "payment_method",
+                    models.CharField(
+                        choices=[("Cash", "Cash"), ("Card", "Card")],
+                        default="Cash",
+                        max_length=20,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "entry_form",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="transaction",
+                        to="cash_counters.entrycounterform",
+                    ),
+                ),
             ],
         ),
     ]

@@ -1,7 +1,8 @@
 """Custom logging handler that writes errors to the database."""
+
 import logging
-import traceback
 import threading
+import traceback
 
 _local = threading.local()
 
@@ -12,7 +13,7 @@ def set_current_request(request):
 
 
 def get_current_request():
-    return getattr(_local, 'request', None)
+    return getattr(_local, "request", None)
 
 
 def clear_current_request():
@@ -28,29 +29,33 @@ class DatabaseLogHandler(logging.Handler):
 
             request = get_current_request()
 
-            exc_type = ''
-            exc_tb = ''
+            exc_type = ""
+            exc_tb = ""
             if record.exc_info and record.exc_info[0]:
                 exc_type = record.exc_info[0].__name__
-                exc_tb = ''.join(traceback.format_exception(*record.exc_info))
+                exc_tb = "".join(traceback.format_exception(*record.exc_info))
 
             user_id = None
-            user_display = ''
-            if request and hasattr(request, 'user') and request.user.is_authenticated:
+            user_display = ""
+            if request and hasattr(request, "user") and request.user.is_authenticated:
                 user_id = request.user.pk
                 user_display = request.user.get_full_name() or request.user.username
 
             ErrorLog.objects.create(
                 level=record.levelname,
-                logger_name=record.name or '',
+                logger_name=record.name or "",
                 message=self.format(record),
                 exception_type=exc_type,
                 exception_traceback=exc_tb,
-                url=getattr(request, 'path', '') if request else '',
-                method=getattr(request, 'method', '') if request else '',
-                query_string=getattr(request, 'GET', {}).urlencode() if request else '',
+                url=getattr(request, "path", "") if request else "",
+                method=getattr(request, "method", "") if request else "",
+                query_string=getattr(request, "GET", {}).urlencode() if request else "",
                 ip_address=self._get_client_ip(request) if request else None,
-                user_agent=str(request.META.get('HTTP_USER_AGENT', ''))[:500] if request else '',
+                user_agent=(
+                    str(request.META.get("HTTP_USER_AGENT", ""))[:500]
+                    if request
+                    else ""
+                ),
                 user_id=user_id,
                 user_display=user_display,
             )
@@ -59,7 +64,7 @@ class DatabaseLogHandler(logging.Handler):
 
     @staticmethod
     def _get_client_ip(request):
-        xff = request.META.get('HTTP_X_FORWARDED_FOR')
+        xff = request.META.get("HTTP_X_FORWARDED_FOR")
         if xff:
-            return xff.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR')
+            return xff.split(",")[0].strip()
+        return request.META.get("REMOTE_ADDR")

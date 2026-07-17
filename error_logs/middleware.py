@@ -1,5 +1,6 @@
 """Middleware that stores the current request so the logging handler can access it."""
-from .handlers import set_current_request, clear_current_request
+
+from .handlers import clear_current_request, set_current_request
 
 
 class ErrorLogMiddleware:

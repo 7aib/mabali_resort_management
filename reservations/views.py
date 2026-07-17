@@ -1,22 +1,27 @@
 """Reservations views."""
+
 from decimal import Decimal
 
-from django.shortcuts import render, redirect
-from django.http import HttpRequest, HttpResponse
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from authentication.choices import UserRoles
-from mabali_resort_management.decorators import roles_required
 from error_logs.decorators import log_errors
-from .models import Room, Reservation
+from mabali_resort_management.decorators import roles_required
+
 from .choices import (
-    RoomCategoryChoices, PaymentMethodChoices, PaymentTypeChoices,
-    ReservationStatusChoices, BankChoices,
+    BankChoices,
+    PaymentMethodChoices,
+    PaymentTypeChoices,
+    ReservationStatusChoices,
+    RoomCategoryChoices,
 )
+from .models import Reservation, Room
 
 User = get_user_model()
 
@@ -36,7 +41,7 @@ def _get_or_create_customer(phone: str, name: str):
     username = phone
     counter = 1
     while User.objects.filter(username=username).exists():
-        username = '%s_%d' % (phone, counter)
+        username = "%s_%d" % (phone, counter)
         counter += 1
     return User.objects.create(
         username=username,
@@ -47,46 +52,62 @@ def _get_or_create_customer(phone: str, name: str):
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.CASHIER, UserRoles.HR_MANAGER)
+@roles_required(
+    UserRoles.CEO,
+    UserRoles.ACCOUNTANT,
+    UserRoles.MAIN_CASHIER,
+    UserRoles.CASHIER,
+    UserRoles.HR_MANAGER,
+)
 @log_errors
 def reservation_create_view(request: HttpRequest) -> HttpResponse:
-    rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by('name')
+    rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by("name")
 
-    if request.method == 'POST':
-        guest_name = request.POST.get('guest_name', '').strip()
-        phone_number = request.POST.get('phone_number', '').strip()
-        no_of_adults = request.POST.get('no_of_adults', 1)
-        no_of_kids = request.POST.get('no_of_kids', 0)
-        room_id = request.POST.get('room')
-        check_in_date = request.POST.get('check_in_date')
-        check_out_date = request.POST.get('check_out_date')
-        nights = request.POST.get('nights', 1)
-        rate_per_night = request.POST.get('rate_per_night', 0)
-        advance_amount = request.POST.get('advance_amount', 0)
-        advance_date = request.POST.get('advance_date') or None
-        advance_bank = request.POST.get('advance_bank', '')
-        discount = request.POST.get('discount', 0)
-        amount_received = request.POST.get('amount_received', 0)
-        payment_type = request.POST.get('payment_type', PaymentTypeChoices.ADVANCE)
-        payment_method = request.POST.get('payment_method', '')
-        remarks = request.POST.get('remarks', '')
+    if request.method == "POST":
+        guest_name = request.POST.get("guest_name", "").strip()
+        phone_number = request.POST.get("phone_number", "").strip()
+        no_of_adults = request.POST.get("no_of_adults", 1)
+        no_of_kids = request.POST.get("no_of_kids", 0)
+        room_id = request.POST.get("room")
+        check_in_date = request.POST.get("check_in_date")
+        check_out_date = request.POST.get("check_out_date")
+        nights = request.POST.get("nights", 1)
+        rate_per_night = request.POST.get("rate_per_night", 0)
+        advance_amount = request.POST.get("advance_amount", 0)
+        advance_date = request.POST.get("advance_date") or None
+        advance_bank = request.POST.get("advance_bank", "")
+        discount = request.POST.get("discount", 0)
+        amount_received = request.POST.get("amount_received", 0)
+        payment_type = request.POST.get("payment_type", PaymentTypeChoices.ADVANCE)
+        payment_method = request.POST.get("payment_method", "")
+        remarks = request.POST.get("remarks", "")
 
-        if not guest_name or not phone_number or not room_id or not check_in_date or not check_out_date:
-            messages.error(request, 'Guest name, phone, room, and dates are required.')
-            return redirect('reservations:reservation_create')
+        if (
+            not guest_name
+            or not phone_number
+            or not room_id
+            or not check_in_date
+            or not check_out_date
+        ):
+            messages.error(request, "Guest name, phone, room, and dates are required.")
+            return redirect("reservations:reservation_create")
 
         try:
-            check_in_date_obj = timezone.datetime.strptime(check_in_date, '%Y-%m-%d').date()
-            check_out_date_obj = timezone.datetime.strptime(check_out_date, '%Y-%m-%d').date()
+            check_in_date_obj = timezone.datetime.strptime(
+                check_in_date, "%Y-%m-%d"
+            ).date()
+            check_out_date_obj = timezone.datetime.strptime(
+                check_out_date, "%Y-%m-%d"
+            ).date()
         except (ValueError, TypeError):
-            messages.error(request, 'Invalid date format.')
-            return redirect('reservations:reservation_create')
+            messages.error(request, "Invalid date format.")
+            return redirect("reservations:reservation_create")
 
         try:
             room = Room.objects.get(pk=room_id, is_deleted=False)
         except Room.DoesNotExist:
-            messages.error(request, 'Invalid room selected.')
-            return redirect('reservations:reservation_create')
+            messages.error(request, "Invalid room selected.")
+            return redirect("reservations:reservation_create")
 
         customer = _get_or_create_customer(phone_number, guest_name)
 
@@ -94,7 +115,10 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
         overlapping = Reservation.objects.filter(
             room=room,
             is_deleted=False,
-            status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
+            status__in=[
+                ReservationStatusChoices.CONFIRMED,
+                ReservationStatusChoices.CHECKED_IN,
+            ],
             check_in_date__lte=check_out_date_obj,
             check_out_date__gte=check_in_date_obj,
         )
@@ -103,9 +127,14 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
             messages.error(
                 request,
                 'Room "%s" is already booked from %s to %s (Guest: %s).'
-                % (room.name, conflict.check_in_date, conflict.check_out_date, conflict.guest_name)
+                % (
+                    room.name,
+                    conflict.check_in_date,
+                    conflict.check_out_date,
+                    conflict.guest_name,
+                ),
             )
-            return redirect('reservations:reservation_create')
+            return redirect("reservations:reservation_create")
 
         try:
             reservation = Reservation(
@@ -131,90 +160,114 @@ def reservation_create_view(request: HttpRequest) -> HttpResponse:
             )
             reservation.full_clean()
             reservation.save()
-            messages.success(request, 'Reservation created for %s.' % guest_name)
-            return redirect('reservations:reservation_list')
+            messages.success(request, "Reservation created for %s." % guest_name)
+            return redirect("reservations:reservation_list")
         except ValidationError as e:
             error_msg = e.messages[0] if e.messages else str(e)
             messages.error(request, error_msg)
-            return redirect('reservations:reservation_create')
+            return redirect("reservations:reservation_create")
         except Exception as e:
-            messages.error(request, 'Error creating reservation: %s' % str(e))
-            return redirect('reservations:reservation_create')
+            messages.error(request, "Error creating reservation: %s" % str(e))
+            return redirect("reservations:reservation_create")
 
     context = {
-        'rooms': rooms,
-        'payment_methods': PaymentMethodChoices.choices,
-        'payment_types': PaymentTypeChoices.choices,
-        'banks': BankChoices.choices,
-        'statuses': ReservationStatusChoices.choices,
-        'today': timezone.localdate(),
+        "rooms": rooms,
+        "payment_methods": PaymentMethodChoices.choices,
+        "payment_types": PaymentTypeChoices.choices,
+        "banks": BankChoices.choices,
+        "statuses": ReservationStatusChoices.choices,
+        "today": timezone.localdate(),
     }
-    return render(request, 'reservations/reservation_create.html', context)
+    return render(request, "reservations/reservation_create.html", context)
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.CASHIER, UserRoles.HR_MANAGER)
+@roles_required(
+    UserRoles.CEO,
+    UserRoles.ACCOUNTANT,
+    UserRoles.MAIN_CASHIER,
+    UserRoles.CASHIER,
+    UserRoles.HR_MANAGER,
+)
 @log_errors
 def reservation_list_view(request: HttpRequest) -> HttpResponse:
-    reservations = Reservation.objects.select_related(
-        'customer', 'room', 'created_by'
-    ).filter(is_deleted=False).order_by('-check_in_date')
+    reservations = (
+        Reservation.objects.select_related("customer", "room", "created_by")
+        .filter(is_deleted=False)
+        .order_by("-check_in_date")
+    )
 
     context = {
-        'reservations': reservations,
-        'total_count': reservations.count(),
+        "reservations": reservations,
+        "total_count": reservations.count(),
     }
-    return render(request, 'reservations/reservation_list.html', context)
+    return render(request, "reservations/reservation_list.html", context)
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.CASHIER, UserRoles.HR_MANAGER)
+@roles_required(
+    UserRoles.CEO,
+    UserRoles.ACCOUNTANT,
+    UserRoles.MAIN_CASHIER,
+    UserRoles.CASHIER,
+    UserRoles.HR_MANAGER,
+)
 @log_errors
 def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
     try:
         reservation = Reservation.objects.get(pk=pk, is_deleted=False)
     except Reservation.DoesNotExist:
-        messages.error(request, 'Reservation not found.')
-        return redirect('reservations:reservation_list')
+        messages.error(request, "Reservation not found.")
+        return redirect("reservations:reservation_list")
 
-    rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by('name')
+    rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by("name")
 
-    if request.method == 'POST':
-        guest_name = request.POST.get('guest_name', '').strip()
-        phone_number = request.POST.get('phone_number', '').strip()
-        no_of_adults = request.POST.get('no_of_adults', 1)
-        no_of_kids = request.POST.get('no_of_kids', 0)
-        room_id = request.POST.get('room')
-        check_in_date = request.POST.get('check_in_date')
-        check_out_date = request.POST.get('check_out_date')
-        nights = request.POST.get('nights', 1)
-        rate_per_night = request.POST.get('rate_per_night', 0)
-        advance_amount = request.POST.get('advance_amount', 0)
-        advance_date = request.POST.get('advance_date') or None
-        advance_bank = request.POST.get('advance_bank', '')
-        discount = request.POST.get('discount', 0)
-        amount_received = request.POST.get('amount_received', 0)
-        payment_type = request.POST.get('payment_type', PaymentTypeChoices.ADVANCE)
-        payment_method = request.POST.get('payment_method', '')
-        status = request.POST.get('status', reservation.status)
-        remarks = request.POST.get('remarks', '')
+    if request.method == "POST":
+        guest_name = request.POST.get("guest_name", "").strip()
+        phone_number = request.POST.get("phone_number", "").strip()
+        no_of_adults = request.POST.get("no_of_adults", 1)
+        no_of_kids = request.POST.get("no_of_kids", 0)
+        room_id = request.POST.get("room")
+        check_in_date = request.POST.get("check_in_date")
+        check_out_date = request.POST.get("check_out_date")
+        nights = request.POST.get("nights", 1)
+        rate_per_night = request.POST.get("rate_per_night", 0)
+        advance_amount = request.POST.get("advance_amount", 0)
+        advance_date = request.POST.get("advance_date") or None
+        advance_bank = request.POST.get("advance_bank", "")
+        discount = request.POST.get("discount", 0)
+        amount_received = request.POST.get("amount_received", 0)
+        payment_type = request.POST.get("payment_type", PaymentTypeChoices.ADVANCE)
+        payment_method = request.POST.get("payment_method", "")
+        status = request.POST.get("status", reservation.status)
+        remarks = request.POST.get("remarks", "")
 
-        if not guest_name or not phone_number or not room_id or not check_in_date or not check_out_date:
-            messages.error(request, 'Guest name, phone, room, and dates are required.')
-            return redirect('reservations:reservation_edit', pk=pk)
+        if (
+            not guest_name
+            or not phone_number
+            or not room_id
+            or not check_in_date
+            or not check_out_date
+        ):
+            messages.error(request, "Guest name, phone, room, and dates are required.")
+            return redirect("reservations:reservation_edit", pk=pk)
 
         try:
-            check_in_date_obj = timezone.datetime.strptime(check_in_date, '%Y-%m-%d').date()
-            check_out_date_obj = timezone.datetime.strptime(check_out_date, '%Y-%m-%d').date()
+            check_in_date_obj = timezone.datetime.strptime(
+                check_in_date, "%Y-%m-%d"
+            ).date()
+            check_out_date_obj = timezone.datetime.strptime(
+                check_out_date, "%Y-%m-%d"
+            ).date()
         except (ValueError, TypeError):
-            messages.error(request, 'Invalid date format.')
-            return redirect('reservations:reservation_edit', pk=pk)
+            messages.error(request, "Invalid date format.")
+            return redirect("reservations:reservation_edit", pk=pk)
 
         try:
             room = Room.objects.get(pk=room_id, is_deleted=False)
         except Room.DoesNotExist:
-            messages.error(request, 'Invalid room selected.')
-            return redirect('reservations:reservation_edit', pk=pk)
+            messages.error(request, "Invalid room selected.")
+            return redirect("reservations:reservation_edit", pk=pk)
 
         customer = _get_or_create_customer(phone_number, guest_name)
 
@@ -222,7 +275,10 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
         overlapping = Reservation.objects.filter(
             room=room,
             is_deleted=False,
-            status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
+            status__in=[
+                ReservationStatusChoices.CONFIRMED,
+                ReservationStatusChoices.CHECKED_IN,
+            ],
             check_in_date__lte=check_out_date_obj,
             check_out_date__gte=check_in_date_obj,
         ).exclude(pk=pk)
@@ -231,9 +287,14 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
             messages.error(
                 request,
                 'Room "%s" is already booked from %s to %s (Guest: %s).'
-                % (room.name, conflict.check_in_date, conflict.check_out_date, conflict.guest_name)
+                % (
+                    room.name,
+                    conflict.check_in_date,
+                    conflict.check_out_date,
+                    conflict.guest_name,
+                ),
             )
-            return redirect('reservations:reservation_edit', pk=pk)
+            return redirect("reservations:reservation_edit", pk=pk)
 
         reservation.customer = customer
         reservation.guest_name = guest_name
@@ -261,21 +322,21 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
         except ValidationError as e:
             error_msg = e.messages[0] if e.messages else str(e)
             messages.error(request, error_msg)
-            return redirect('reservations:reservation_edit', pk=pk)
+            return redirect("reservations:reservation_edit", pk=pk)
 
-        messages.success(request, 'Reservation updated for %s.' % guest_name)
-        return redirect('reservations:reservation_list')
+        messages.success(request, "Reservation updated for %s." % guest_name)
+        return redirect("reservations:reservation_list")
 
     context = {
-        'reservation': reservation,
-        'rooms': rooms,
-        'payment_methods': PaymentMethodChoices.choices,
-        'payment_types': PaymentTypeChoices.choices,
-        'banks': BankChoices.choices,
-        'statuses': ReservationStatusChoices.choices,
-        'today': timezone.localdate(),
+        "reservation": reservation,
+        "rooms": rooms,
+        "payment_methods": PaymentMethodChoices.choices,
+        "payment_types": PaymentTypeChoices.choices,
+        "banks": BankChoices.choices,
+        "statuses": ReservationStatusChoices.choices,
+        "today": timezone.localdate(),
     }
-    return render(request, 'reservations/reservation_edit.html', context)
+    return render(request, "reservations/reservation_edit.html", context)
 
 
 @login_required
@@ -283,19 +344,22 @@ def reservation_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
 def customer_lookup_api(request: HttpRequest) -> HttpResponse:
     """AJAX endpoint — return customer data by phone number."""
     from django.http import JsonResponse
-    phone = request.GET.get('phone', '').strip()
+
+    phone = request.GET.get("phone", "").strip()
     if not phone:
-        return JsonResponse({'found': False})
+        return JsonResponse({"found": False})
     customer = _get_customer_by_phone(phone)
     if not customer:
-        return JsonResponse({'found': False})
+        return JsonResponse({"found": False})
     display_name = customer.get_full_name() or customer.first_name or customer.username
-    return JsonResponse({
-        'found': True,
-        'name': display_name,
-        'phone': customer.phone_number,
-        'email': customer.email,
-    })
+    return JsonResponse(
+        {
+            "found": True,
+            "name": display_name,
+            "phone": customer.phone_number,
+            "email": customer.email,
+        }
+    )
 
 
 @login_required
@@ -303,13 +367,16 @@ def customer_lookup_api(request: HttpRequest) -> HttpResponse:
 def room_status_view(request: HttpRequest) -> HttpResponse:
     """Show live status of every room."""
     today = timezone.localdate()
-    rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by('name')
+    rooms = Room.objects.filter(is_deleted=False, is_active=True).order_by("name")
 
     # Collect all active (non-cancelled, non-checked_out) reservations in one query
     active_reservations = Reservation.objects.filter(
         is_deleted=False,
-        status__in=[ReservationStatusChoices.CONFIRMED, ReservationStatusChoices.CHECKED_IN],
-    ).select_related('customer', 'room')
+        status__in=[
+            ReservationStatusChoices.CONFIRMED,
+            ReservationStatusChoices.CHECKED_IN,
+        ],
+    ).select_related("customer", "room")
 
     # Build a lookup: room_id -> list of active reservations
     res_map = {}
@@ -332,65 +399,72 @@ def room_status_view(request: HttpRequest) -> HttpResponse:
                     matched = res
 
         if matched and matched.check_in_date <= today < matched.check_out_date:
-            status = 'occupied'
-            detail = 'Checking out %s' % matched.check_out_date.strftime('%b %d')
+            status = "occupied"
+            detail = "Checking out %s" % matched.check_out_date.strftime("%b %d")
         elif matched:
-            status = 'reserved'
-            detail = 'Check-in %s' % matched.check_in_date.strftime('%b %d')
+            status = "reserved"
+            detail = "Check-in %s" % matched.check_in_date.strftime("%b %d")
         else:
-            status = 'available'
-            detail = 'Available'
+            status = "available"
+            detail = "Available"
 
         guest = None
         if matched:
-            guest = matched.guest_name or (matched.customer.get_full_name() if matched.customer else '—')
+            guest = matched.guest_name or (
+                matched.customer.get_full_name() if matched.customer else "—"
+            )
 
-        room_data.append({
-            'room': room,
-            'status': status,
-            'guest': guest,
-            'detail': detail,
-        })
+        room_data.append(
+            {
+                "room": room,
+                "status": status,
+                "guest": guest,
+                "detail": detail,
+            }
+        )
 
-    occupied_count = sum(1 for r in room_data if r['status'] == 'occupied')
-    reserved_count = sum(1 for r in room_data if r['status'] == 'reserved')
-    available_count = sum(1 for r in room_data if r['status'] == 'available')
+    occupied_count = sum(1 for r in room_data if r["status"] == "occupied")
+    reserved_count = sum(1 for r in room_data if r["status"] == "reserved")
+    available_count = sum(1 for r in room_data if r["status"] == "available")
 
     context = {
-        'room_data': room_data,
-        'total_rooms': len(room_data),
-        'occupied_count': occupied_count,
-        'reserved_count': reserved_count,
-        'available_count': available_count,
-        'today': today,
+        "room_data": room_data,
+        "total_rooms": len(room_data),
+        "occupied_count": occupied_count,
+        "reserved_count": reserved_count,
+        "available_count": available_count,
+        "today": today,
     }
-    return render(request, 'reservations/room_status.html', context)
+    return render(request, "reservations/room_status.html", context)
 
 
 # ── Room Management CRUD ────────────────────────────────────────────
 
+
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@roles_required(
+    UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER
+)
 @log_errors
 def room_create_view(request: HttpRequest) -> HttpResponse:
-    if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        category = request.POST.get('category', '')
-        rate_per_night = request.POST.get('rate_per_night', 0)
-        is_active = request.POST.get('is_active') == 'on'
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        category = request.POST.get("category", "")
+        rate_per_night = request.POST.get("rate_per_night", 0)
+        is_active = request.POST.get("is_active") == "on"
 
         if not name or not category:
-            messages.error(request, 'Name and category are required.')
-            return redirect('reservations:room_create')
+            messages.error(request, "Name and category are required.")
+            return redirect("reservations:room_create")
 
         if Room.objects.filter(name__iexact=name, is_deleted=False).exists():
-            messages.error(request, 'A room with this name already exists.')
-            return redirect('reservations:room_create')
+            messages.error(request, "A room with this name already exists.")
+            return redirect("reservations:room_create")
 
         try:
             rate = Decimal(str(rate_per_night))
         except (ValueError, TypeError):
-            rate = Decimal('0')
+            rate = Decimal("0")
 
         Room.objects.create(
             name=name,
@@ -399,65 +473,73 @@ def room_create_view(request: HttpRequest) -> HttpResponse:
             is_active=is_active,
         )
         messages.success(request, 'Room "%s" created successfully.' % name)
-        return redirect('reservations:room_list')
+        return redirect("reservations:room_list")
 
     context = {
-        'categories': RoomCategoryChoices.choices,
+        "categories": RoomCategoryChoices.choices,
     }
-    return render(request, 'reservations/room_create.html', context)
+    return render(request, "reservations/room_create.html", context)
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@roles_required(
+    UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER
+)
 @log_errors
 def room_list_view(request: HttpRequest) -> HttpResponse:
-    rooms = Room.objects.filter(is_deleted=False).order_by('name')
+    rooms = Room.objects.filter(is_deleted=False).order_by("name")
 
-    search_query = request.GET.get('search', '').strip()
+    search_query = request.GET.get("search", "").strip()
     if search_query:
         rooms = rooms.filter(name__icontains=search_query)
 
-    category_filter = request.GET.get('category', '').strip()
+    category_filter = request.GET.get("category", "").strip()
     if category_filter:
         rooms = rooms.filter(category=category_filter)
 
     context = {
-        'rooms': rooms,
-        'search_query': search_query,
-        'category_filter': category_filter,
-        'categories': RoomCategoryChoices.choices,
+        "rooms": rooms,
+        "search_query": search_query,
+        "category_filter": category_filter,
+        "categories": RoomCategoryChoices.choices,
     }
-    return render(request, 'reservations/room_list.html', context)
+    return render(request, "reservations/room_list.html", context)
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@roles_required(
+    UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER
+)
 @log_errors
 def room_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
     try:
         room = Room.objects.get(pk=pk, is_deleted=False)
     except Room.DoesNotExist:
-        messages.error(request, 'Room not found.')
-        return redirect('reservations:room_list')
+        messages.error(request, "Room not found.")
+        return redirect("reservations:room_list")
 
-    if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        category = request.POST.get('category', '')
-        rate_per_night = request.POST.get('rate_per_night', 0)
-        is_active = request.POST.get('is_active') == 'on'
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        category = request.POST.get("category", "")
+        rate_per_night = request.POST.get("rate_per_night", 0)
+        is_active = request.POST.get("is_active") == "on"
 
         if not name or not category:
-            messages.error(request, 'Name and category are required.')
-            return redirect('reservations:room_edit', pk=pk)
+            messages.error(request, "Name and category are required.")
+            return redirect("reservations:room_edit", pk=pk)
 
-        if Room.objects.filter(name__iexact=name, is_deleted=False).exclude(pk=pk).exists():
-            messages.error(request, 'A room with this name already exists.')
-            return redirect('reservations:room_edit', pk=pk)
+        if (
+            Room.objects.filter(name__iexact=name, is_deleted=False)
+            .exclude(pk=pk)
+            .exists()
+        ):
+            messages.error(request, "A room with this name already exists.")
+            return redirect("reservations:room_edit", pk=pk)
 
         try:
             rate = Decimal(str(rate_per_night))
         except (ValueError, TypeError):
-            rate = Decimal('0')
+            rate = Decimal("0")
 
         room.name = name
         room.category = category
@@ -466,30 +548,32 @@ def room_edit_view(request: HttpRequest, pk: int) -> HttpResponse:
         room.save()
 
         messages.success(request, 'Room "%s" updated successfully.' % room.name)
-        return redirect('reservations:room_list')
+        return redirect("reservations:room_list")
 
     context = {
-        'room': room,
-        'categories': RoomCategoryChoices.choices,
+        "room": room,
+        "categories": RoomCategoryChoices.choices,
     }
-    return render(request, 'reservations/room_edit.html', context)
+    return render(request, "reservations/room_edit.html", context)
 
 
 @login_required
-@roles_required(UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER)
+@roles_required(
+    UserRoles.CEO, UserRoles.ACCOUNTANT, UserRoles.MAIN_CASHIER, UserRoles.HR_MANAGER
+)
 @log_errors
 def room_delete_view(request: HttpRequest, pk: int) -> HttpResponse:
     try:
         room = Room.objects.get(pk=pk, is_deleted=False)
     except Room.DoesNotExist:
-        messages.error(request, 'Room not found.')
-        return redirect('reservations:room_list')
+        messages.error(request, "Room not found.")
+        return redirect("reservations:room_list")
 
-    if request.method == 'POST':
+    if request.method == "POST":
         room.is_deleted = True
         room.deleted_at = timezone.now()
-        room.save(update_fields=['is_deleted', 'deleted_at'])
+        room.save(update_fields=["is_deleted", "deleted_at"])
         messages.success(request, 'Room "%s" deleted successfully.' % room.name)
-        return redirect('reservations:room_list')
+        return redirect("reservations:room_list")
 
-    return redirect('reservations:room_list')
+    return redirect("reservations:room_list")

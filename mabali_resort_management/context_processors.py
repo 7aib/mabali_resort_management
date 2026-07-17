@@ -1,10 +1,10 @@
 from .constants import (
-    PROJECT_NAME,
-    PROJECT_FULL_NAME,
+    HERO_IMAGE_URL,
     LOGO_ICON,
     LOGO_TEXT,
+    PROJECT_FULL_NAME,
+    PROJECT_NAME,
     WEBSITE_URL,
-    HERO_IMAGE_URL,
 )
 
 

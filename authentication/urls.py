@@ -1,15 +1,15 @@
 from django.urls import path
 
 from .views import (
-    logout_view, 
-    login_view, 
-    employee_dashboard, 
-    profile_view, 
+    change_password_view,
     employee_create,
+    employee_dashboard,
+    employee_delete,
     employee_detail,
     employee_edit,
-    employee_delete,
-    change_password_view
+    login_view,
+    logout_view,
+    profile_view,
 )
 
 urlpatterns = [

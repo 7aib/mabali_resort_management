@@ -3,14 +3,19 @@
 
 class SimplePage:
     """Lightweight page object compatible with Django template pagination patterns."""
+
     def __init__(self, object_list, number, total_pages, total_count):
         self.object_list = list(object_list)
         self.number = number
-        self.paginator = type('P', (), {
-            'num_pages': total_pages,
-            'count': total_count,
-            'page_range': range(1, total_pages + 1),
-        })()
+        self.paginator = type(
+            "P",
+            (),
+            {
+                "num_pages": total_pages,
+                "count": total_count,
+                "page_range": range(1, total_pages + 1),
+            },
+        )()
 
     @property
     def has_previous(self):
@@ -37,7 +42,7 @@ class SimplePage:
         return (self.number - 1) * len(self.object_list) + len(self.object_list)
 
 
-def paginate_queryset(request, queryset, per_page=20, page_param='page'):
+def paginate_queryset(request, queryset, per_page=20, page_param="page"):
     """
     Generic pagination helper.
 
@@ -79,10 +84,10 @@ def paginate_queryset(request, queryset, per_page=20, page_param='page'):
     page_obj = SimplePage(items, current_page, total_pages, total_count)
 
     return {
-        'page_obj': page_obj,
-        'items': page_obj.object_list,
-        'page_range': page_obj.paginator.page_range,
-        'current_page': page_obj.number,
-        'total_pages': total_pages,
-        'total_count': total_count,
+        "page_obj": page_obj,
+        "items": page_obj.object_list,
+        "page_range": page_obj.paginator.page_range,
+        "current_page": page_obj.number,
+        "total_pages": total_pages,
+        "total_count": total_count,
     }

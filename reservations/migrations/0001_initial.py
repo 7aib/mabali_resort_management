@@ -16,70 +16,233 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Customer',
+            name="Customer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('deleted_at', models.DateTimeField(blank=True, null=True)),
-                ('name', models.CharField(max_length=150)),
-                ('phone_number', models.CharField(db_index=True, max_length=15)),
-                ('email', models.EmailField(blank=True, default='', max_length=254)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_deleted", models.BooleanField(default=False)),
+                ("deleted_at", models.DateTimeField(blank=True, null=True)),
+                ("name", models.CharField(max_length=150)),
+                ("phone_number", models.CharField(db_index=True, max_length=15)),
+                ("email", models.EmailField(blank=True, default="", max_length=254)),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Room',
+            name="Room",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('deleted_at', models.DateTimeField(blank=True, null=True)),
-                ('name', models.CharField(max_length=80, unique=True)),
-                ('category', models.CharField(choices=[('hut', 'Hut'), ('suite', 'Suite'), ('room', 'Room'), ('honeymoon', 'Honeymoon')], max_length=20)),
-                ('rate_per_night', models.DecimalField(decimal_places=2, default=0, max_digits=10, validators=[django.core.validators.MinValueValidator(0)])),
-                ('is_active', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_deleted", models.BooleanField(default=False)),
+                ("deleted_at", models.DateTimeField(blank=True, null=True)),
+                ("name", models.CharField(max_length=80, unique=True)),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("hut", "Hut"),
+                            ("suite", "Suite"),
+                            ("room", "Room"),
+                            ("honeymoon", "Honeymoon"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "rate_per_night",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0,
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
             ],
             options={
-                'ordering': ['name'],
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Reservation',
+            name="Reservation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('deleted_at', models.DateTimeField(blank=True, null=True)),
-                ('phone_number', models.CharField(blank=True, default='', max_length=15)),
-                ('guest_name', models.CharField(blank=True, default='', max_length=150)),
-                ('no_of_adults', models.PositiveIntegerField(default=1, validators=[django.core.validators.MinValueValidator(1)])),
-                ('no_of_kids', models.PositiveIntegerField(default=0, validators=[django.core.validators.MinValueValidator(0)])),
-                ('check_in_date', models.DateField()),
-                ('check_out_date', models.DateField()),
-                ('nights', models.PositiveIntegerField(default=1, validators=[django.core.validators.MinValueValidator(1)])),
-                ('rate_per_night', models.DecimalField(decimal_places=2, default=0, max_digits=10, validators=[django.core.validators.MinValueValidator(0)])),
-                ('discount', models.DecimalField(decimal_places=2, default=0, max_digits=10, validators=[django.core.validators.MinValueValidator(0)])),
-                ('advance_amount', models.DecimalField(decimal_places=2, default=0, max_digits=12, validators=[django.core.validators.MinValueValidator(0)])),
-                ('advance_date', models.DateField(blank=True, null=True)),
-                ('advance_bank', models.CharField(blank=True, choices=[('mabali_fbil', 'Mabali FBIL')], default='', max_length=30)),
-                ('amount_received', models.DecimalField(decimal_places=2, default=0, max_digits=12, validators=[django.core.validators.MinValueValidator(0)])),
-                ('payment_type', models.CharField(choices=[('advance', 'Advance Payment'), ('final', 'Final Payment')], default='advance', max_length=10)),
-                ('payment_method', models.CharField(blank=True, choices=[('cash', 'Cash'), ('credit', 'Credit Card'), ('ibft', 'IBFT')], default='', max_length=10)),
-                ('status', models.CharField(choices=[('confirmed', 'Confirmed'), ('checked_in', 'Checked In'), ('checked_out', 'Checked Out'), ('cancelled', 'Cancelled')], default='confirmed', max_length=20)),
-                ('remarks', models.TextField(blank=True, default='')),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_reservations', to=settings.AUTH_USER_MODEL)),
-                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reservations', to='reservations.customer')),
-                ('room', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reservations', to='reservations.room')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_deleted", models.BooleanField(default=False)),
+                ("deleted_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "phone_number",
+                    models.CharField(blank=True, default="", max_length=15),
+                ),
+                (
+                    "guest_name",
+                    models.CharField(blank=True, default="", max_length=150),
+                ),
+                (
+                    "no_of_adults",
+                    models.PositiveIntegerField(
+                        default=1,
+                        validators=[django.core.validators.MinValueValidator(1)],
+                    ),
+                ),
+                (
+                    "no_of_kids",
+                    models.PositiveIntegerField(
+                        default=0,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                ("check_in_date", models.DateField()),
+                ("check_out_date", models.DateField()),
+                (
+                    "nights",
+                    models.PositiveIntegerField(
+                        default=1,
+                        validators=[django.core.validators.MinValueValidator(1)],
+                    ),
+                ),
+                (
+                    "rate_per_night",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0,
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "discount",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0,
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "advance_amount",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0,
+                        max_digits=12,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                ("advance_date", models.DateField(blank=True, null=True)),
+                (
+                    "advance_bank",
+                    models.CharField(
+                        blank=True,
+                        choices=[("mabali_fbil", "Mabali FBIL")],
+                        default="",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "amount_received",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0,
+                        max_digits=12,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "payment_type",
+                    models.CharField(
+                        choices=[
+                            ("advance", "Advance Payment"),
+                            ("final", "Final Payment"),
+                        ],
+                        default="advance",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "payment_method",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("cash", "Cash"),
+                            ("credit", "Credit Card"),
+                            ("ibft", "IBFT"),
+                        ],
+                        default="",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("confirmed", "Confirmed"),
+                            ("checked_in", "Checked In"),
+                            ("checked_out", "Checked Out"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        default="confirmed",
+                        max_length=20,
+                    ),
+                ),
+                ("remarks", models.TextField(blank=True, default="")),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_reservations",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "customer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reservations",
+                        to="reservations.customer",
+                    ),
+                ),
+                (
+                    "room",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reservations",
+                        to="reservations.room",
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Reservations',
-                'ordering': ['-check_in_date', '-created_at'],
+                "verbose_name_plural": "Reservations",
+                "ordering": ["-check_in_date", "-created_at"],
             },
         ),
     ]

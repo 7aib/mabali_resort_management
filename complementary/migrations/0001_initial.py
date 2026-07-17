@@ -8,33 +8,115 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='FreeBilling',
+            name="FreeBilling",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('deleted_at', models.DateTimeField(blank=True, null=True)),
-                ('date', models.DateField(default=django.utils.timezone.now)),
-                ('guest_name', models.CharField(blank=True, default='', max_length=150)),
-                ('bill_type', models.CharField(choices=[('QB Bill', 'QB Bill'), ('Partial Bill', 'Partial Bill'), ('Without QT', 'Without QT'), ('Zoho Bill Full', 'Zoho Bill Full')], default='QB Bill', max_length=50)),
-                ('head', models.CharField(choices=[('Govt. Officials', 'Govt. Officials'), ('Marketing PR Bills', 'Marketing PR Bills'), ('Executive Personals', 'Executive Personals'), ('Guest Complaint', 'Guest Complaint'), ('Executive Family / Home / Reference', 'Executive Family / Home / Reference'), ('Night Stay', 'Night Stay'), ('Staff', 'Staff'), ('Vendor', 'Vendor'), ('Guest', 'Guest'), ('Auditor - Naeem', 'Auditor - Naeem'), ('Music Team (Tea)', 'Music Team (Tea)')], default='Guest', max_length=100)),
-                ('bill_status', models.CharField(choices=[('Paid', 'Paid'), ('Paid with Discount', 'Paid with Discount'), ('Pending', 'Pending'), ('Free', 'Free'), ('Package Bill', 'Package Bill')], default='Paid', max_length=50)),
-                ('invoice_no', models.CharField(blank=True, default='', max_length=50)),
-                ('department', models.CharField(choices=[('All Department', 'All Department'), ('F&B', 'F&B'), ('Watersports', 'Watersports'), ('Adventure Activities', 'Adventure Activities'), ('Shooting Range', 'Shooting Range'), ('Event', 'Event'), ('Night Stay', 'Night Stay'), ('Tuck Shop', 'Tuck Shop')], default='All Department', max_length=50)),
-                ('total_bill_amount', models.DecimalField(decimal_places=2, default=0, max_digits=12)),
-                ('discount_amount', models.DecimalField(decimal_places=2, default=0, max_digits=12)),
-                ('bill_upload', models.FileField(blank=True, null=True, upload_to='bills/')),
-                ('reference', models.TextField(blank=True, default='')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_deleted", models.BooleanField(default=False)),
+                ("deleted_at", models.DateTimeField(blank=True, null=True)),
+                ("date", models.DateField(default=django.utils.timezone.now)),
+                (
+                    "guest_name",
+                    models.CharField(blank=True, default="", max_length=150),
+                ),
+                (
+                    "bill_type",
+                    models.CharField(
+                        choices=[
+                            ("QB Bill", "QB Bill"),
+                            ("Partial Bill", "Partial Bill"),
+                            ("Without QT", "Without QT"),
+                            ("Zoho Bill Full", "Zoho Bill Full"),
+                        ],
+                        default="QB Bill",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "head",
+                    models.CharField(
+                        choices=[
+                            ("Govt. Officials", "Govt. Officials"),
+                            ("Marketing PR Bills", "Marketing PR Bills"),
+                            ("Executive Personals", "Executive Personals"),
+                            ("Guest Complaint", "Guest Complaint"),
+                            (
+                                "Executive Family / Home / Reference",
+                                "Executive Family / Home / Reference",
+                            ),
+                            ("Night Stay", "Night Stay"),
+                            ("Staff", "Staff"),
+                            ("Vendor", "Vendor"),
+                            ("Guest", "Guest"),
+                            ("Auditor - Naeem", "Auditor - Naeem"),
+                            ("Music Team (Tea)", "Music Team (Tea)"),
+                        ],
+                        default="Guest",
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "bill_status",
+                    models.CharField(
+                        choices=[
+                            ("Paid", "Paid"),
+                            ("Paid with Discount", "Paid with Discount"),
+                            ("Pending", "Pending"),
+                            ("Free", "Free"),
+                            ("Package Bill", "Package Bill"),
+                        ],
+                        default="Paid",
+                        max_length=50,
+                    ),
+                ),
+                ("invoice_no", models.CharField(blank=True, default="", max_length=50)),
+                (
+                    "department",
+                    models.CharField(
+                        choices=[
+                            ("All Department", "All Department"),
+                            ("F&B", "F&B"),
+                            ("Watersports", "Watersports"),
+                            ("Adventure Activities", "Adventure Activities"),
+                            ("Shooting Range", "Shooting Range"),
+                            ("Event", "Event"),
+                            ("Night Stay", "Night Stay"),
+                            ("Tuck Shop", "Tuck Shop"),
+                        ],
+                        default="All Department",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "total_bill_amount",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                (
+                    "discount_amount",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                (
+                    "bill_upload",
+                    models.FileField(blank=True, null=True, upload_to="bills/"),
+                ),
+                ("reference", models.TextField(blank=True, default="")),
             ],
             options={
-                'verbose_name_plural': 'Free Billings',
-                'ordering': ['-date', '-created_at'],
+                "verbose_name_plural": "Free Billings",
+                "ordering": ["-date", "-created_at"],
             },
         ),
     ]

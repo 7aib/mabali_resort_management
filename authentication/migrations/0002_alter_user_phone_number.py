@@ -6,13 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('authentication', '0001_initial'),
+        ("authentication", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='phone_number',
-            field=models.CharField(blank=True, help_text='Format: +92XXXXXXXXXX (e.g. +9230112345678)', max_length=15, null=True, unique=True),
+            model_name="user",
+            name="phone_number",
+            field=models.CharField(
+                blank=True,
+                help_text="Format: +92XXXXXXXXXX (e.g. +9230112345678)",
+                max_length=15,
+                null=True,
+                unique=True,
+            ),
         ),
     ]

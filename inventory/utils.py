@@ -1,14 +1,21 @@
 """Inventory status transition utilities."""
+
 from django.core.exceptions import ValidationError
 
 from .choices import StockStatusChoices
 
-
 # Define allowed transitions: {from_status: [allowed_to_statuses]}
 STATUS_TRANSITIONS = {
-    StockStatusChoices.REQUIRED: [StockStatusChoices.ISSUED, StockStatusChoices.ORDERED, StockStatusChoices.CANCELLED],
+    StockStatusChoices.REQUIRED: [
+        StockStatusChoices.ISSUED,
+        StockStatusChoices.ORDERED,
+        StockStatusChoices.CANCELLED,
+    ],
     StockStatusChoices.ISSUED: [],
-    StockStatusChoices.ORDERED: [StockStatusChoices.PURCHASED, StockStatusChoices.CANCELLED],
+    StockStatusChoices.ORDERED: [
+        StockStatusChoices.PURCHASED,
+        StockStatusChoices.CANCELLED,
+    ],
     StockStatusChoices.PURCHASED: [],
     StockStatusChoices.CANCELLED: [],
 }
@@ -32,11 +39,14 @@ def validate_status_transition(old_status, new_status):
 
     allowed = get_allowed_transitions(old_status)
     if new_status not in allowed:
-        old_label = StockStatusChoices(old_status).label if old_status else 'None'
+        old_label = StockStatusChoices(old_status).label if old_status else "None"
         new_label = StockStatusChoices(new_status).label
-        allowed_labels = ', '.join(StockStatusChoices(s).label for s in allowed) or 'none'
+        allowed_labels = (
+            ", ".join(StockStatusChoices(s).label for s in allowed) or "none"
+        )
         raise ValidationError(
-            'Cannot transition from "%s" to "%s". Allowed: %s' % (old_label, new_label, allowed_labels)
+            'Cannot transition from "%s" to "%s". Allowed: %s'
+            % (old_label, new_label, allowed_labels)
         )
     return True
 
